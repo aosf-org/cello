@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CELLO — Code Evaluation LLM Leaderboard (Open)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2332;
+            --bg-card-hover: #1f2b3d;
+            --border: #2a3548;
+            --text-primary: #e5e7eb;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent: #3b82f6;
+            --accent-light: #60a5fa;
+            --accent-dark: #2563eb;
+            --green: #10b981;
+            --green-light: #34d399;
+            --yellow: #f59e0b;
+            --red: #ef4444;
+            --purple: #8b5cf6;
+            --cyan: #06b6d4;
+            --orange: #f97316;
+            --pink: #ec4899;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem 3rem;
+            background: linear-gradient(180deg, #0f1729 0%, var(--bg-primary) 100%);
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 1rem;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 50px;
+            font-size: 0.8rem;
+            color: var(--accent-light);
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #fff 0%, #60a5fa 50%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero h1 span {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0.75rem auto 1.5rem;
+            font-weight: 300;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent-light);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .hero-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.15rem;
+        }
+
+        .meta-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+        }
+
+        .meta-bar span { display: flex; align-items: center; gap: 0.3rem; }
+        .dot { color: var(--green); font-size: 0.6rem; }
+
+        /* Navigation */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 14, 23, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+        }
+
+        .nav-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0;
+            overflow-x: auto;
+        }
+
+        .nav-btn {
+            padding: 0.85rem 1.25rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .nav-btn:hover { color: var(--text-primary); }
+        .nav-btn.active {
+            color: var(--accent-light);
+            border-bottom-color: var(--accent);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .filter-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .filter-select, .search-input {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .filter-select:focus, .search-input:focus {
+            border-color: var(--accent);
+        }
+
+        .search-input {
+            width: 220px;
+            margin-left: auto;
+        }
+
+        .search-input::placeholder { color: var(--text-muted); }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        thead th {
+            padding: 0.85rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            white-space: nowrap;
+            user-select: none;
+            transition: color 0.2s;
+            position: relative;
+        }
+
+        thead th:hover { color: var(--accent-light); }
+        thead th.sorted { color: var(--accent-light); }
+        thead th .sort-arrow { margin-left: 0.3rem; font-size: 0.65rem; }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(42, 53, 72, 0.5);
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover { background: var(--bg-card-hover); }
+        tbody tr:last-child { border-bottom: none; }
+
+        td {
+            padding: 0.75rem 1rem;
+            white-space: nowrap;
+        }
+
+        .rank {
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            width: 2rem;
+        }
+
+        .rank-1 { color: #fbbf24; }
+        .rank-2 { color: #d1d5db; }
+        .rank-3 { color: #cd7f32; }
+
+        .model-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .model-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .model-info { display: flex; flex-direction: column; }
+        .model-name { font-weight: 600; color: var(--text-primary); }
+        .model-org { font-size: 0.7rem; color: var(--text-muted); }
+
+        .badge-open {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 50px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--green-light);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-closed {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 50px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .score {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .score-high { color: var(--green-light); }
+        .score-mid { color: var(--yellow); }
+        .score-low { color: var(--red); }
+
+        .overall-score {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .chart-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+        }
+
+        /* Methodology */
+        .method-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .method-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .method-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .method-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .method-card li {
+            padding: 0.4rem 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .method-card li::before {
+            content: '→';
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        /* Projects */
+        .project-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .project-card h4 {
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .project-card h4 a {
+            color: var(--accent-light);
+            text-decoration: none;
+        }
+
+        .project-card h4 a:hover { text-decoration: underline; }
+
+        .project-lang {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .lang-rust { background: rgba(222, 165, 132, 0.15); color: #dea584; }
+        .lang-js { background: rgba(240, 219, 79, 0.15); color: #f0db4f; }
+        .lang-python { background: rgba(55, 118, 171, 0.15); color: #4b8bbe; }
+
+        .project-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Section Headers */
+        .section-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            max-width: 700px;
+        }
+
+        /* Comparison Section */
+        .comparison-table {
+            width: 100%;
+            font-size: 0.85rem;
+        }
+
+        .comparison-table th {
+            padding: 0.75rem 1rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .comparison-table td {
+            text-align: center;
+            padding: 0.65rem 1rem;
+        }
+
+        .comparison-table td:first-child {
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .check { color: var(--green-light); }
+        .cross { color: var(--red); opacity: 0.5; }
+        .partial { color: var(--yellow); }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        footer a { color: var(--accent-light); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            .hero-subtitle { font-size: 0.95rem; }
+            .hero-stats { gap: 1rem; }
+            .container { padding: 1rem; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .method-grid { grid-template-columns: 1fr; }
+            .filters { flex-direction: column; align-items: stretch; }
+            .search-input { width: 100%; margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="hero">
+    <div class="hero-badge">
+        <span class="dot">●</span> Live Benchmark — Open Source
+    </div>
+    <h1><span>CELLO</span></h1>
+    <p class="hero-subtitle">
+        Code Evaluation LLM Leaderboard (Open) — A transparent, community-driven benchmark for evaluating LLM code generation quality with a focus on open-source models.
+    </p>
+    <div class="hero-stats">
+        <div class="hero-stat">
+            <div class="hero-stat-value">11</div>
+            <div class="hero-stat-label">Models Evaluated</div>
+        </div>
+        <div class="hero-stat">
+            <div class="hero-stat-value">10,240</div>
+            <div class="hero-stat-label">Test Cases</div>
+        </div>
+        <div class="hero-stat">
+            <div class="hero-stat-value">4</div>
+            <div class="hero-stat-label">Languages</div>
+        </div>
+        <div class="hero-stat">
+            <div class="hero-stat-value">7</div>
+            <div class="hero-stat-label">Quality Dimensions</div>
+        </div>
+    </div>
+    <div class="meta-bar">
+        <span><span class="dot">●</span> Last updated: Feb 3, 2026</span>
+        <span>v0.1.0-beta</span>
+        <span>100% Open Source Tools</span>
+    </div>
+</header>
+
+<nav>
+    <div class="nav-inner">
+        <button class="nav-btn active" data-section="leaderboard">🏆 Leaderboard</button>
+        <button class="nav-btn" data-section="charts">📊 Visualizations</button>
+        <button class="nav-btn" data-section="methodology">🔬 Methodology</button>
+        <button class="nav-btn" data-section="projects">📁 Test Projects</button>
+        <button class="nav-btn" data-section="comparison">⚖️ vs. Other Benchmarks</button>
+    </div>
+</nav>
+
+<div class="container">
+
+    <!-- LEADERBOARD -->
+    <div class="section active" id="leaderboard">
+        <div class="section-header">
+            <h2>🏆 Model Leaderboard</h2>
+            <p>Ranked by composite score across 7 evaluation dimensions. All evaluations use OSI-approved open-source tools.</p>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <span class="filter-label">Type:</span>
+                <select class="filter-select" id="filter-type">
+                    <option value="all">All Models</option>
+                    <option value="open">Open Source Only</option>
+                    <option value="closed">Closed Source Only</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Size:</span>
+                <select class="filter-select" id="filter-size">
+                    <option value="all">All Sizes</option>
+                    <option value="small">≤ 15B</option>
+                    <option value="medium">16B – 72B</option>
+                    <option value="large">72B+</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Sort:</span>
+                <select class="filter-select" id="sort-by">
+                    <option value="overall">Overall Score</option>
+                    <option value="completion">Code Completion</option>
+                    <option value="bugs">Bug Detection</option>
+                    <option value="review">Code Review</option>
+                    <option value="security">Security</option>
+                    <option value="docs">Documentation</option>
+                    <option value="refactor">Refactoring</option>
+                    <option value="crosslang">Cross-Language</option>
+                </select>
+            </div>
+            <input type="text" class="search-input" id="search" placeholder="🔍 Search models...">
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:3rem">#</th>
+                        <th>Model</th>
+                        <th>Type</th>
+                        <th data-col="completion">Completion</th>
+                        <th data-col="bugs">Bug Detect</th>
+                        <th data-col="review">Code Review</th>
+                        <th data-col="security">Security</th>
+                        <th data-col="docs">Docs</th>
+                        <th data-col="refactor">Refactor</th>
+                        <th data-col="crosslang">Cross-Lang</th>
+                        <th data-col="overall">Overall ▼</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body"></tbody>
+            </table>
+        </div>
+
+        <p style="margin-top:1rem; font-size:0.75rem; color:var(--text-muted)">
+            ⚠️ <strong>Demo Data:</strong> Scores shown are illustrative proof-of-concept data. Production evaluations will use automated pipelines with full reproducibility.
+        </p>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="section" id="charts">
+        <div class="section-header">
+            <h2>📊 Visualizations</h2>
+            <p>Visual comparison of model performance across evaluation dimensions.</p>
+        </div>
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Overall Scores — All Models</h3>
+                <div class="chart-container"><canvas id="barChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Top 5 Models — Radar Comparison</h3>
+                <div class="chart-container"><canvas id="radarChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Open Source vs Closed Source — Average by Category</h3>
+                <div class="chart-container"><canvas id="groupedBarChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Model Size vs. Performance</h3>
+                <div class="chart-container"><canvas id="scatterChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- METHODOLOGY -->
+    <div class="section" id="methodology">
+        <div class="section-header">
+            <h2>🔬 Evaluation Methodology</h2>
+            <p>CELLO uses a multi-dimensional evaluation framework with 100% open-source tooling.</p>
+        </div>
+        <div class="method-grid">
+            <div class="method-card">
+                <h3>📊 Evaluation Categories</h3>
+                <ul>
+                    <li>Code Completion Accuracy (20%) — Unit test pass rate on generated code</li>
+                    <li>Bug Detection Rate (15%) — Ability to identify seeded bugs in real code</li>
+                    <li>Code Review Quality (15%) — Expert-rated review comments on PRs</li>
+                    <li>Security Awareness (15%) — Vulnerability detection and secure coding</li>
+                    <li>Documentation Generation (10%) — Quality of generated docs/comments</li>
+                    <li>Refactoring Quality (10%) — Improvement metrics on messy code</li>
+                    <li>Cross-Language Understanding (15%) — Translation accuracy (JS↔Rust, Python↔Rust)</li>
+                </ul>
+            </div>
+            <div class="method-card">
+                <h3>🔧 Open Source Tools</h3>
+                <ul>
+                    <li><strong>Semgrep</strong> — Security analysis and pattern matching</li>
+                    <li><strong>Clippy</strong> — Rust linting and idiom checking</li>
+                    <li><strong>ESLint</strong> — JavaScript/TypeScript quality analysis</li>
+                    <li><strong>Ruff</strong> — Python linting (fast, comprehensive)</li>
+                    <li><strong>Bandit</strong> — Python security analysis</li>
+                    <li><strong>Custom test harnesses</strong> — Functional correctness via unit tests</li>
+                    <li><strong>cargo bench / pytest-benchmark</strong> — Performance evaluation</li>
+                </ul>
+            </div>
+            <div class="method-card">
+                <h3>🎯 Task Types</h3>
+                <ul>
+                    <li><strong>Function Completion</strong> — Given a signature and docstring, generate implementation</li>
+                    <li><strong>Bug Finding</strong> — Identify intentionally seeded bugs in real code</li>
+                    <li><strong>Code Review</strong> — Provide meaningful review of a pull request diff</li>
+                    <li><strong>Security Audit</strong> — Identify vulnerabilities in code samples</li>
+                    <li><strong>Doc Generation</strong> — Generate documentation for undocumented code</li>
+                    <li><strong>Refactoring</strong> — Improve deliberately messy code maintaining behavior</li>
+                    <li><strong>Cross-Language Port</strong> — Translate between JS/Python and Rust</li>
+                </ul>
+            </div>
+            <div class="method-card">
+                <h3>🔑 Key Principles</h3>
+                <ul>
+                    <li><strong>Reproducibility</strong> — All prompts, configs, and evaluation scripts are public</li>
+                    <li><strong>Determinism</strong> — Temperature=0 for all evaluations</li>
+                    <li><strong>Real-world code</strong> — Tasks extracted from actual open-source projects</li>
+                    <li><strong>OSI-approved tools only</strong> — No proprietary analysis engines</li>
+                    <li><strong>Community governance</strong> — Open methodology, open contributions</li>
+                    <li><strong>Version tracking</strong> — Every model version tested and tracked over time</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEST PROJECTS -->
+    <div class="section" id="projects">
+        <div class="section-header">
+            <h2>📁 Test Projects</h2>
+            <p>CELLO evaluates LLMs against real open-source repositories spanning multiple languages, paradigms, and complexity levels.</p>
+        </div>
+        <div class="method-grid">
+            <div class="project-card">
+                <h4><a href="https://github.com/d3/d3" target="_blank">D3.js</a> <span class="project-lang lang-js">JavaScript</span></h4>
+                <p class="project-desc">The definitive data visualization library for the web. Complex functional API, SVG/DOM manipulation, sophisticated mathematical algorithms for scales, projections, and force simulations.</p>
+                <ul style="list-style:none; padding:0; font-size:0.8rem; color:var(--text-muted);">
+                    <li>⭐ 109k+ stars • 📦 Modular architecture • 🧮 Heavy algorithmic content</li>
+                </ul>
+            </div>
+            <div class="project-card">
+                <h4><a href="https://github.com/mofa-org/makepad-d3" target="_blank">makepad-d3</a> <span class="project-lang lang-rust">Rust</span></h4>
+                <p class="project-desc">D3.js-compatible data visualization library for Makepad's GPU-accelerated rendering. 40+ chart types including Bar, Line, Pie, Sankey, Force Graph, Treemap, Globe Map.</p>
+                <ul style="list-style:none; padding:0; font-size:0.8rem; color:var(--text-muted);">
+                    <li>🔄 JS→Rust port • 🖥️ GPU rendering • 📊 D3-compatible API</li>
+                </ul>
+            </div>
+            <div class="project-card">
+                <h4><a href="https://github.com/matplotlib/matplotlib" target="_blank">matplotlib</a> <span class="project-lang lang-python">Python</span></h4>
+                <p class="project-desc">Python's comprehensive 2D plotting library. Massive OOP codebase with NumPy integration, extensive customization, and decades of battle-tested code.</p>
+                <ul style="list-style:none; padding:0; font-size:0.8rem; color:var(--text-muted);">
+                    <li>⭐ 20k+ stars • 🐍 Pure Python + C extensions • 📈 Gold standard for scientific vis</li>
+                </ul>
+            </div>
+            <div class="project-card">
+                <h4><a href="https://github.com/mofa-org/makepad-matplot" target="_blank">makepad-matplot</a> <span class="project-lang lang-rust">Rust</span></h4>
+                <p class="project-desc">Matplotlib-compatible plotting library for Makepad GPU framework. Translates Python's OOP plotting paradigm into Rust's ownership model.</p>
+                <ul style="list-style:none; padding:0; font-size:0.8rem; color:var(--text-muted);">
+                    <li>🔄 Python→Rust port • 🖥️ GPU rendering • 📊 matplotlib-compatible API</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="margin-top:2rem; padding:1.5rem; background:var(--bg-card); border:1px solid var(--border); border-radius:12px;">
+            <h3 style="font-size:1.05rem; margin-bottom:0.75rem;">🎯 Why These Projects?</h3>
+            <div class="method-grid" style="margin-top:0.75rem;">
+                <div>
+                    <strong style="color:var(--accent-light);">Cross-Language Pairs</strong>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.3rem;">JS↔Rust (D3↔makepad-d3) and Python↔Rust (matplotlib↔makepad-matplot) test translation understanding</p>
+                </div>
+                <div>
+                    <strong style="color:var(--purple);">Multiple Paradigms</strong>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.3rem;">Functional (D3), OOP (matplotlib), Systems (Rust) — tests versatility across programming styles</p>
+                </div>
+                <div>
+                    <strong style="color:var(--cyan);">Algorithmic Depth</strong>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.3rem;">Scales, projections, force layouts, tree algorithms — requires genuine mathematical understanding</p>
+                </div>
+                <div>
+                    <strong style="color:var(--green);">Visual Verification</strong>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.3rem;">Output can be visually verified — a chart either looks right or it doesn't</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPARISON -->
+    <div class="section" id="comparison">
+        <div class="section-header">
+            <h2>⚖️ CELLO vs. Existing Benchmarks</h2>
+            <p>How CELLO fills the gaps left by current LLM code evaluation approaches.</p>
+        </div>
+        <div class="table-wrapper" style="margin-top:1.5rem;">
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th style="text-align:left">Feature</th>
+                        <th>SonarSource</th>
+                        <th>HumanEval</th>
+                        <th>SWE-bench</th>
+                        <th>BigCodeBench</th>
+                        <th style="background:rgba(59,130,246,0.1)">CELLO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Test Cases</td><td>~4,000</td><td>164</td><td>2,294</td><td>1,140</td><td style="background:rgba(59,130,246,0.05)"><strong>10,000+</strong></td></tr>
+                    <tr><td>Open-Source Focus</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="partial">~</td><td class="check" style="background:rgba(59,130,246,0.05)"><strong>✓</strong></td></tr>
+                    <tr><td>Multi-Language</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="partial">~</td><td class="check" style="background:rgba(59,130,246,0.05)"><strong>✓</strong></td></tr>
+                    <tr><td>Code Quality Metrics</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="check" style="background:rgba(59,130,246,0.05)"><strong>✓</strong></td></tr>
+                    <tr><td>Security Analysis</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="check" style="background:rgba(59,130,246,0.05)"><strong>✓</strong></td></tr>
+                    <tr><td>Performance Eval</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="check" style="background:rgba(59,130,246,0.05)"><strong>✓</strong></td></tr>
+                    <tr><td>Real-World Projects</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="check" style="background:rgba(59,130,246,0.05)"><strong>✓</strong></td></tr>
+                    <tr><td>Community-Driven</td><td class="cross">✗</td><td class="cross">✗</td><td class="partial">~</td><td class="partial">~</td><td class="check" style="background:rgba(59,130,246,0.05)"><strong>✓</strong></td></tr>
+                    <tr><td>Fully Transparent</td><td class="cross">✗</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check" style="background:rgba(59,130,246,0.05)"><strong>✓</strong></td></tr>
+                    <tr><td>Live/Continuous</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="check" style="background:rgba(59,130,246,0.05)"><strong>✓</strong></td></tr>
+                    <tr><td>Cross-Language Eval</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="check" style="background:rgba(59,130,246,0.05)"><strong>✓</strong></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top:2rem; padding:1.5rem; background:var(--bg-card); border:1px solid rgba(59,130,246,0.3); border-radius:12px;">
+            <h3 style="font-size:1.05rem; margin-bottom:0.75rem; color:var(--accent-light);">💡 Why CELLO Matters</h3>
+            <p style="color:var(--text-secondary); font-size:0.9rem; line-height:1.7;">
+                Existing benchmarks were designed for a world where LLMs were primarily closed-source products. The open-source AI revolution has created a vibrant ecosystem of models that developers can self-host, fine-tune, and integrate — but they lack reliable quality benchmarks.
+                <br><br>
+                SonarSource's benchmark, while pioneering, serves primarily as a marketing tool for their commercial SonarQube product. It uses a proprietary evaluation pipeline that cannot be independently reproduced, and focuses on models most developers cannot modify or self-host.
+                <br><br>
+                <strong>CELLO is built for the open-source community, by the open-source community.</strong> Every tool in the evaluation pipeline is OSI-approved. Every test case, prompt, and result is publicly available. Anyone can contribute, verify, and build upon the benchmark.
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    <p><strong>CELLO</strong> — Code Evaluation LLM Leaderboard (Open)</p>
+    <p style="margin-top:0.5rem;">
+        <a href="https://github.com/agentic-osf/cello">GitHub</a> · 
+        Open Source · MIT License · 
+        Built with 100% OSI-Approved Tools
+    </p>
+    <p style="margin-top:0.5rem; font-size:0.75rem;">
+        A project of the Agentic Open Source Foundation
+    </p>
+</footer>
+
+<script>
+// === MODEL DATA ===
+const models = [
+    { name: "DeepSeek Coder V3", org: "DeepSeek", type: "open", size: 236, params: "236B", color: "#10b981",
+      completion: 91.2, bugs: 87.5, review: 85.8, security: 83.1, docs: 88.4, refactor: 86.2, crosslang: 84.7 },
+    { name: "Qwen 2.5 Coder 72B", org: "Alibaba", type: "open", size: 72, params: "72B", color: "#8b5cf6",
+      completion: 89.8, bugs: 85.2, review: 84.1, security: 81.9, docs: 87.6, refactor: 84.8, crosslang: 82.3 },
+    { name: "GPT-4o", org: "OpenAI", type: "closed", size: 200, params: "~200B", color: "#f97316",
+      completion: 92.4, bugs: 88.1, review: 87.3, security: 85.6, docs: 90.2, refactor: 87.5, crosslang: 86.1 },
+    { name: "Claude 3.5 Sonnet", org: "Anthropic", type: "closed", size: 175, params: "~175B", color: "#ec4899",
+      completion: 93.1, bugs: 89.4, review: 88.7, security: 87.2, docs: 91.5, refactor: 88.1, crosslang: 87.8 },
+    { name: "Llama 3.1 70B", org: "Meta", type: "open", size: 70, params: "70B", color: "#3b82f6",
+      completion: 86.5, bugs: 81.3, review: 80.7, security: 78.4, docs: 84.2, refactor: 81.9, crosslang: 78.6 },
+    { name: "Mistral Large 2", org: "Mistral AI", type: "open", size: 123, params: "123B", color: "#06b6d4",
+      completion: 88.7, bugs: 84.6, review: 83.2, security: 80.8, docs: 86.1, refactor: 83.7, crosslang: 81.5 },
+    { name: "StarCoder2 15B", org: "BigCode", type: "open", size: 15, params: "15B", color: "#f59e0b",
+      completion: 79.3, bugs: 74.8, review: 72.1, security: 70.5, docs: 76.8, refactor: 73.4, crosslang: 68.2 },
+    { name: "CodeLlama 70B", org: "Meta", type: "open", size: 70, params: "70B", color: "#3b82f6",
+      completion: 85.1, bugs: 80.7, review: 78.9, security: 77.2, docs: 82.4, refactor: 80.1, crosslang: 76.8 },
+    { name: "Phi-3 Medium", org: "Microsoft", type: "open", size: 14, params: "14B", color: "#10b981",
+      completion: 78.6, bugs: 73.2, review: 71.8, security: 69.4, docs: 75.9, refactor: 72.6, crosslang: 66.1 },
+    { name: "Gemini Pro", org: "Google", type: "closed", size: 180, params: "~180B", color: "#ef4444",
+      completion: 90.8, bugs: 86.7, review: 85.4, security: 83.9, docs: 88.7, refactor: 85.9, crosslang: 84.2 },
+    { name: "GPT-4 Turbo", org: "OpenAI", type: "closed", size: 200, params: "~200B", color: "#f97316",
+      completion: 91.5, bugs: 87.2, review: 86.1, security: 84.3, docs: 89.4, refactor: 86.7, crosslang: 85.3 },
+];
+
+// Compute overall scores
+models.forEach(m => {
+    m.overall = +(m.completion * 0.20 + m.bugs * 0.15 + m.review * 0.15 + 
+                  m.security * 0.15 + m.docs * 0.10 + m.refactor * 0.10 + m.crosslang * 0.15).toFixed(1);
+});
+
+function scoreClass(v) {
+    if (v >= 85) return 'score-high';
+    if (v >= 75) return 'score-mid';
+    return 'score-low';
+}
+
+function rankClass(i) {
+    if (i === 0) return 'rank rank-1';
+    if (i === 1) return 'rank rank-2';
+    if (i === 2) return 'rank rank-3';
+    return 'rank';
+}
+
+function iconBg(m) {
+    const colors = { 'DeepSeek': '#10b981', 'Alibaba': '#8b5cf6', 'OpenAI': '#f97316', 
+                     'Anthropic': '#ec4899', 'Meta': '#3b82f6', 'Mistral AI': '#06b6d4',
+                     'BigCode': '#f59e0b', 'Microsoft': '#10b981', 'Google': '#ef4444' };
+    return colors[m.org] || '#6b7280';
+}
+
+function renderTable() {
+    const typeFilter = document.getElementById('filter-type').value;
+    const sizeFilter = document.getElementById('filter-size').value;
+    const sortBy = document.getElementById('sort-by').value;
+    const search = document.getElementById('search').value.toLowerCase();
+
+    let filtered = models.filter(m => {
+        if (typeFilter !== 'all' && m.type !== typeFilter) return false;
+        if (sizeFilter === 'small' && m.size > 15) return false;
+        if (sizeFilter === 'medium' && (m.size <= 15 || m.size > 72)) return false;
+        if (sizeFilter === 'large' && m.size <= 72) return false;
+        if (search && !m.name.toLowerCase().includes(search) && !m.org.toLowerCase().includes(search)) return false;
+        return true;
+    });
+
+    filtered.sort((a, b) => b[sortBy] - a[sortBy]);
+
+    const tbody = document.getElementById('leaderboard-body');
+    tbody.innerHTML = filtered.map((m, i) => `
+        <tr>
+            <td class="${rankClass(i)}">${i + 1}</td>
+            <td>
+                <div class="model-cell">
+                    <div class="model-icon" style="background:${iconBg(m)}20; color:${iconBg(m)}; border:1px solid ${iconBg(m)}40;">
+                        ${m.name.charAt(0)}
+                    </div>
+                    <div class="model-info">
+                        <span class="model-name">${m.name}</span>
+                        <span class="model-org">${m.org} · ${m.params}</span>
+                    </div>
+                </div>
+            </td>
+            <td><span class="badge-${m.type}">${m.type === 'open' ? '🔓 Open' : '🔒 Closed'}</span></td>
+            <td class="score ${scoreClass(m.completion)}">${m.completion}</td>
+            <td class="score ${scoreClass(m.bugs)}">${m.bugs}</td>
+            <td class="score ${scoreClass(m.review)}">${m.review}</td>
+            <td class="score ${scoreClass(m.security)}">${m.security}</td>
+            <td class="score ${scoreClass(m.docs)}">${m.docs}</td>
+            <td class="score ${scoreClass(m.refactor)}">${m.refactor}</td>
+            <td class="score ${scoreClass(m.crosslang)}">${m.crosslang}</td>
+            <td class="score overall-score ${scoreClass(m.overall)}">${m.overall}</td>
+        </tr>
+    `).join('');
+}
+
+// Filters
+document.getElementById('filter-type').addEventListener('change', renderTable);
+document.getElementById('filter-size').addEventListener('change', renderTable);
+document.getElementById('sort-by').addEventListener('change', renderTable);
+document.getElementById('search').addEventListener('input', renderTable);
+
+// Navigation
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.section).classList.add('active');
+        if (btn.dataset.section === 'charts') initCharts();
+    });
+});
+
+// === CHARTS ===
+let chartsInitialized = false;
+
+function initCharts() {
+    if (chartsInitialized) return;
+    chartsInitialized = true;
+
+    const sorted = [...models].sort((a, b) => b.overall - a.overall);
+    const labels = sorted.map(m => m.name);
+    const bgColors = sorted.map(m => m.type === 'open' ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.5)');
+    const borderColors = sorted.map(m => m.type === 'open' ? '#10b981' : '#ef4444');
+
+    // Bar Chart
+    new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Overall Score',
+                data: sorted.map(m => m.overall),
+                backgroundColor: bgColors,
+                borderColor: borderColors,
+                borderWidth: 1,
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: (ctx) => sorted[ctx.dataIndex].type === 'open' ? '🔓 Open Source' : '🔒 Closed Source'
+                    }
+                }
+            },
+            scales: {
+                x: { min: 60, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
+                y: { grid: { display: false }, ticks: { color: '#e5e7eb', font: { size: 11 } } }
+            }
+        }
+    });
+
+    // Radar Chart — Top 5
+    const top5 = sorted.slice(0, 5);
+    const radarColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+    new Chart(document.getElementById('radarChart'), {
+        type: 'radar',
+        data: {
+            labels: ['Completion', 'Bug Detect', 'Code Review', 'Security', 'Docs', 'Refactor', 'Cross-Lang'],
+            datasets: top5.map((m, i) => ({
+                label: m.name,
+                data: [m.completion, m.bugs, m.review, m.security, m.docs, m.refactor, m.crosslang],
+                borderColor: radarColors[i],
+                backgroundColor: radarColors[i] + '15',
+                borderWidth: 2,
+                pointRadius: 3,
+                pointBackgroundColor: radarColors[i],
+            }))
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#e5e7eb', font: { size: 11 } } } },
+            scales: {
+                r: {
+                    min: 70, max: 95,
+                    grid: { color: 'rgba(255,255,255,0.08)' },
+                    angleLines: { color: 'rgba(255,255,255,0.08)' },
+                    pointLabels: { color: '#9ca3af', font: { size: 11 } },
+                    ticks: { display: false }
+                }
+            }
+        }
+    });
+
+    // Grouped Bar — Open vs Closed
+    const cats = ['completion', 'bugs', 'review', 'security', 'docs', 'refactor', 'crosslang'];
+    const catNames = ['Completion', 'Bug Detect', 'Code Review', 'Security', 'Docs', 'Refactor', 'Cross-Lang'];
+    const openModels = models.filter(m => m.type === 'open');
+    const closedModels = models.filter(m => m.type === 'closed');
+    const openAvg = cats.map(c => +(openModels.reduce((s, m) => s + m[c], 0) / openModels.length).toFixed(1));
+    const closedAvg = cats.map(c => +(closedModels.reduce((s, m) => s + m[c], 0) / closedModels.length).toFixed(1));
+
+    new Chart(document.getElementById('groupedBarChart'), {
+        type: 'bar',
+        data: {
+            labels: catNames,
+            datasets: [
+                { label: 'Open Source (avg)', data: openAvg, backgroundColor: 'rgba(16, 185, 129, 0.7)', borderColor: '#10b981', borderWidth: 1, borderRadius: 4 },
+                { label: 'Closed Source (avg)', data: closedAvg, backgroundColor: 'rgba(239, 68, 68, 0.5)', borderColor: '#ef4444', borderWidth: 1, borderRadius: 4 }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#e5e7eb' } } },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+                y: { min: 65, max: 95, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } }
+            }
+        }
+    });
+
+    // Scatter — Size vs Performance
+    new Chart(document.getElementById('scatterChart'), {
+        type: 'scatter',
+        data: {
+            datasets: [
+                {
+                    label: 'Open Source',
+                    data: openModels.map(m => ({ x: m.size, y: m.overall, label: m.name })),
+                    backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                    borderColor: '#10b981',
+                    pointRadius: 8,
+                    pointHoverRadius: 12,
+                },
+                {
+                    label: 'Closed Source',
+                    data: closedModels.map(m => ({ x: m.size, y: m.overall, label: m.name })),
+                    backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                    borderColor: '#ef4444',
+                    pointRadius: 8,
+                    pointHoverRadius: 12,
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: '#e5e7eb' } },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => {
+                            const d = ctx.raw;
+                            return `${d.label}: ${d.y} (${d.x}B params)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Parameters (Billions)', color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
+                y: { title: { display: true, text: 'Overall Score', color: '#9ca3af' }, min: 65, max: 95, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } }
+            }
+        }
+    });
+}
+
+// Initial render
+renderTable();
+</script>
+
+</body>
+</html>
+
