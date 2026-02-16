@@ -444,6 +444,36 @@ error: aborting due to 1 previous error; 2 warnings emitted
 For more information about this error, try `rustc --explain E0506`.
 </code></pre>
 
+            <div style="background: #3d1c1c; border-left: 4px solid #da3633; padding: 20px; margin: 20px 0; border-radius: 6px;">
+                <h3 style="color: #ff7b72; margin-top: 0;">🔍 Failure Analysis</h3>
+                
+                <p><strong>Error Type:</strong> E0506: Borrow Checker Violation</p>
+                <p><strong>Summary:</strong> Cannot assign to a variable because it is borrowed</p>
+                
+                <p><strong>Location:</strong> Line 1: `use std::collections::hash_map::DefaultHasher;`</p>
+                
+                <h4 style="color: #ff7b72; margin-top: 20px;">What Went Wrong</h4>
+                <p>Rust's borrow checker prevents you from modifying a variable while you have an active borrow of it.
+In this case, the code tries to assign to a mutable reference (`*current`) while `entry` still borrows it.
+This is a classic pattern when working with self-referential data structures like linked lists.</p>
+                
+                <h4 style="color: #ff7b72; margin-top: 20px;">Root Cause</h4>
+                <p>The LLM translated C's pointer manipulation patterns directly to Rust, but didn't account for Rust's ownership rules.
+C allows you to modify pointers freely, but Rust tracks borrows statically and prevents simultaneous aliasing + mutation.</p>
+                
+                <h4 style="color: #ff7b72; margin-top: 20px;">How to Fix It</h4>
+                <pre style="background: #0d1117; padding: 15px; border-radius: 4px; overflow-x: auto;">Use `std::mem::replace()` or restructure the code to avoid borrowing and mutating simultaneously:
+```rust
+// Instead of:
+*current = entry.next.take();
+
+// Use:
+let next = std::mem::replace(current, None);
+*current = next.and_then(|mut e| e.next.take());
+```
+Or use `Option::take()` earlier to move ownership before the borrow.</pre>
+            </div>
+
             <h3>Generated Rust Code (3738 bytes)</h3>
             <pre><code>use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -756,6 +786,36 @@ error: aborting due to 3 previous errors; 1 warning emitted
 Some errors have detailed explanations: E0277, E0506.
 For more information about an error, try `rustc --explain E0277`.
 </code></pre>
+
+            <div style="background: #3d1c1c; border-left: 4px solid #da3633; padding: 20px; margin: 20px 0; border-radius: 6px;">
+                <h3 style="color: #ff7b72; margin-top: 0;">🔍 Failure Analysis</h3>
+                
+                <p><strong>Error Type:</strong> E0506: Borrow Checker Violation</p>
+                <p><strong>Summary:</strong> Cannot assign to a variable because it is borrowed</p>
+                
+                <p><strong>Location:</strong> Line 5: `use std::ptr;`</p>
+                
+                <h4 style="color: #ff7b72; margin-top: 20px;">What Went Wrong</h4>
+                <p>Rust's borrow checker prevents you from modifying a variable while you have an active borrow of it.
+In this case, the code tries to assign to a mutable reference (`*current`) while `entry` still borrows it.
+This is a classic pattern when working with self-referential data structures like linked lists.</p>
+                
+                <h4 style="color: #ff7b72; margin-top: 20px;">Root Cause</h4>
+                <p>The LLM translated C's pointer manipulation patterns directly to Rust, but didn't account for Rust's ownership rules.
+C allows you to modify pointers freely, but Rust tracks borrows statically and prevents simultaneous aliasing + mutation.</p>
+                
+                <h4 style="color: #ff7b72; margin-top: 20px;">How to Fix It</h4>
+                <pre style="background: #0d1117; padding: 15px; border-radius: 4px; overflow-x: auto;">Use `std::mem::replace()` or restructure the code to avoid borrowing and mutating simultaneously:
+```rust
+// Instead of:
+*current = entry.next.take();
+
+// Use:
+let next = std::mem::replace(current, None);
+*current = next.and_then(|mut e| e.next.take());
+```
+Or use `Option::take()` earlier to move ownership before the borrow.</pre>
+            </div>
 
             <h3>Generated Rust Code (4309 bytes)</h3>
             <pre><code>use std::collections::hash_map::DefaultHasher;
