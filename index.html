@@ -545,26 +545,26 @@
     </p>
     <div class="hero-stats">
         <div class="hero-stat">
-            <div class="hero-stat-value">11</div>
+            <div class="hero-stat-value">2</div>
             <div class="hero-stat-label">Models Evaluated</div>
         </div>
         <div class="hero-stat">
-            <div class="hero-stat-value">10,240</div>
-            <div class="hero-stat-label">Test Cases</div>
+            <div class="hero-stat-value">18</div>
+            <div class="hero-stat-label">Evaluation Metrics</div>
         </div>
         <div class="hero-stat">
-            <div class="hero-stat-value">4</div>
+            <div class="hero-stat-value">2</div>
             <div class="hero-stat-label">Languages</div>
         </div>
         <div class="hero-stat">
-            <div class="hero-stat-value">7</div>
+            <div class="hero-stat-value">6</div>
             <div class="hero-stat-label">Quality Dimensions</div>
         </div>
     </div>
     <div class="meta-bar">
-        <span><span class="dot">●</span> Last updated: Feb 3, 2026</span>
-        <span>v0.1.0-beta</span>
-        <span>100% Open Source Tools</span>
+        <span><span class="dot">●</span> Last updated: Feb 16, 2026 (with real compilation)</span>
+        <span>v0.2.0-beta</span>
+        <span>100% Open Source Tools + Detailed Reports</span>
     </div>
 </header>
 
@@ -575,6 +575,7 @@
         <button class="nav-btn" data-section="methodology">🔬 Methodology</button>
         <button class="nav-btn" data-section="projects">📁 Test Projects</button>
         <button class="nav-btn" data-section="comparison">⚖️ vs. Other Benchmarks</button>
+        <a href="reports/index.html" style="text-decoration: none;"><button class="nav-btn" style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; font-weight: 600;">📊 Detailed Reports</button></a>
     </div>
 </nav>
 
@@ -584,7 +585,8 @@
     <div class="section active" id="leaderboard">
         <div class="section-header">
             <h2>🏆 Model Leaderboard</h2>
-            <p>Ranked by composite score across 7 evaluation dimensions. All evaluations use OSI-approved open-source tools.</p>
+            <p>Ranked by composite score across 7 evaluation dimensions. All evaluations use OSI-approved open-source tools and <strong>real rustc compilation</strong>.</p>
+            <p style="margin-top: 0.5rem; color: var(--accent-light);"><strong>📊 New:</strong> <a href="reports/index.html" style="color: var(--accent-light); text-decoration: underline;">Detailed evaluation reports</a> now available — view C source, generated Rust code, compilation errors, and full scoring breakdowns.</p>
         </div>
 
         <div class="filters">
@@ -853,28 +855,11 @@
 <script>
 // === MODEL DATA ===
 const models = [
-    { name: "DeepSeek Coder V3", org: "DeepSeek", type: "open", size: 236, params: "236B", color: "#10b981",
-      completion: 91.2, bugs: 87.5, review: 85.8, security: 83.1, docs: 88.4, refactor: 86.2, crosslang: 84.7 },
-    { name: "Qwen 2.5 Coder 72B", org: "Alibaba", type: "open", size: 72, params: "72B", color: "#8b5cf6",
-      completion: 89.8, bugs: 85.2, review: 84.1, security: 81.9, docs: 87.6, refactor: 84.8, crosslang: 82.3 },
-    { name: "GPT-4o", org: "OpenAI", type: "closed", size: 200, params: "~200B", color: "#f97316",
-      completion: 92.4, bugs: 88.1, review: 87.3, security: 85.6, docs: 90.2, refactor: 87.5, crosslang: 86.1 },
-    { name: "Claude 3.5 Sonnet", org: "Anthropic", type: "closed", size: 175, params: "~175B", color: "#ec4899",
-      completion: 93.1, bugs: 89.4, review: 88.7, security: 87.2, docs: 91.5, refactor: 88.1, crosslang: 87.8 },
-    { name: "Llama 3.1 70B", org: "Meta", type: "open", size: 70, params: "70B", color: "#3b82f6",
-      completion: 86.5, bugs: 81.3, review: 80.7, security: 78.4, docs: 84.2, refactor: 81.9, crosslang: 78.6 },
-    { name: "Mistral Large 2", org: "Mistral AI", type: "open", size: 123, params: "123B", color: "#06b6d4",
-      completion: 88.7, bugs: 84.6, review: 83.2, security: 80.8, docs: 86.1, refactor: 83.7, crosslang: 81.5 },
-    { name: "StarCoder2 15B", org: "BigCode", type: "open", size: 15, params: "15B", color: "#f59e0b",
-      completion: 79.3, bugs: 74.8, review: 72.1, security: 70.5, docs: 76.8, refactor: 73.4, crosslang: 68.2 },
-    { name: "CodeLlama 70B", org: "Meta", type: "open", size: 70, params: "70B", color: "#3b82f6",
-      completion: 85.1, bugs: 80.7, review: 78.9, security: 77.2, docs: 82.4, refactor: 80.1, crosslang: 76.8 },
-    { name: "Phi-3 Medium", org: "Microsoft", type: "open", size: 14, params: "14B", color: "#10b981",
-      completion: 78.6, bugs: 73.2, review: 71.8, security: 69.4, docs: 75.9, refactor: 72.6, crosslang: 66.1 },
-    { name: "Gemini Pro", org: "Google", type: "closed", size: 180, params: "~180B", color: "#ef4444",
-      completion: 90.8, bugs: 86.7, review: 85.4, security: 83.9, docs: 88.7, refactor: 85.9, crosslang: 84.2 },
-    { name: "GPT-4 Turbo", org: "OpenAI", type: "closed", size: 200, params: "~200B", color: "#f97316",
-      completion: 91.5, bugs: 87.2, review: 86.1, security: 84.3, docs: 89.4, refactor: 86.7, crosslang: 85.3 },
+    { name: "Claude Sonnet 4.5", org: "Anthropic", type: "closed", size: 200, params: "~200B", color: "#ec4899",
+      completion: 69.0, bugs: 28.2, review: 55.9, security: 78.5, docs: 31.5, refactor: 52.0, crosslang: 63.8 },
+    { name: "Gemini 2.0 Flash", org: "Google", type: "closed", size: 180, params: "~180B", color: "#ef4444",
+      completion: 66.9, bugs: 37.8, review: 63.2, security: 51.7, docs: 42.5, refactor: 58.8, crosslang: 61.8 },
+    // ✅ REAL DATA - Generated from actual LLM evaluations on 2026-02-15
 ];
 
 // Compute overall scores
