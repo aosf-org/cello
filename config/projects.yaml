@@ -1,0 +1,33 @@
+# CELLO Test Projects Configuration
+# Add new projects here - no code changes needed!
+
+projects:
+  string_utils:
+    name: "String Utilities"
+    description: "String manipulation functions: duplicate, trim, lowercase, concat, char count"
+    source_language: c
+    target_language: rust
+    source_file: "test-projects/c/string_utils.c"
+    complexity: low
+    size_bytes: 1768
+    enabled: true
+
+  buffer:
+    name: "Dynamic Buffer"
+    description: "Dynamic buffer with growing byte array management"
+    source_language: c
+    target_language: rust
+    source_file: "test-projects/c/buffer.c"
+    complexity: medium
+    size_bytes: 1997
+    enabled: true
+
+  hashmap:
+    name: "Hash Map"
+    description: "Hash map implementation with separate chaining"
+    source_language: c
+    target_language: rust
+    source_file: "test-projects/c/hashmap.c"
+    complexity: high
+    size_bytes: 3297
+    enabled: true

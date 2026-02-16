@@ -679,55 +679,116 @@
     <div class="section" id="methodology">
         <div class="section-header">
             <h2>🔬 Evaluation Methodology</h2>
-            <p>CELLO uses a multi-dimensional evaluation framework with 100% open-source tooling.</p>
+            <p>CELLO evaluates C → Rust transpilation quality using real compiler verification and multi-dimensional scoring.</p>
         </div>
-        <div class="method-grid">
-            <div class="method-card">
-                <h3>📊 Evaluation Categories</h3>
-                <ul>
-                    <li>Code Completion Accuracy (20%) — Unit test pass rate on generated code</li>
-                    <li>Bug Detection Rate (15%) — Ability to identify seeded bugs in real code</li>
-                    <li>Code Review Quality (15%) — Expert-rated review comments on PRs</li>
-                    <li>Security Awareness (15%) — Vulnerability detection and secure coding</li>
-                    <li>Documentation Generation (10%) — Quality of generated docs/comments</li>
-                    <li>Refactoring Quality (10%) — Improvement metrics on messy code</li>
-                    <li>Cross-Language Understanding (15%) — Translation accuracy (JS↔Rust, Python↔Rust)</li>
-                </ul>
+
+        <!-- WORKFLOW DIAGRAM -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 30px; margin: 30px 0;">
+            <h3 style="text-align: center; color: var(--accent); margin-bottom: 30px;">📊 Evaluation Workflow</h3>
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+                <div style="flex: 1; min-width: 140px; text-align: center; padding: 20px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px;">
+                    <div style="width: 50px; height: 50px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.5em; margin: 0 auto 10px;">1</div>
+                    <h4 style="margin: 10px 0 5px; color: var(--text-primary);">C Source Code</h4>
+                    <p style="font-size: 0.85em; color: var(--text-muted); margin: 0;">Real infrastructure code</p>
+                </div>
+                <div style="color: var(--accent); font-size: 2em; flex-shrink: 0;">→</div>
+                <div style="flex: 1; min-width: 140px; text-align: center; padding: 20px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px;">
+                    <div style="width: 50px; height: 50px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.5em; margin: 0 auto 10px;">2</div>
+                    <h4 style="margin: 10px 0 5px; color: var(--text-primary);">LLM Transpilation</h4>
+                    <p style="font-size: 0.85em; color: var(--text-muted); margin: 0;">Claude & Gemini generate Rust</p>
+                </div>
+                <div style="color: var(--accent); font-size: 2em; flex-shrink: 0;">→</div>
+                <div style="flex: 1; min-width: 140px; text-align: center; padding: 20px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px;">
+                    <div style="width: 50px; height: 50px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.5em; margin: 0 auto 10px;">3</div>
+                    <h4 style="margin: 10px 0 5px; color: var(--text-primary);">Rustc Compilation</h4>
+                    <p style="font-size: 0.85em; color: var(--text-muted); margin: 0;">Real compiler verification</p>
+                </div>
+                <div style="color: var(--accent); font-size: 2em; flex-shrink: 0;">→</div>
+                <div style="flex: 1; min-width: 140px; text-align: center; padding: 20px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px;">
+                    <div style="width: 50px; height: 50px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.5em; margin: 0 auto 10px;">4</div>
+                    <h4 style="margin: 10px 0 5px; color: var(--text-primary);">Quality Scoring</h4>
+                    <p style="font-size: 0.85em; color: var(--text-muted); margin: 0;">6 dimensions (0-100 pts)</p>
+                </div>
+                <div style="color: var(--accent); font-size: 2em; flex-shrink: 0;">→</div>
+                <div style="flex: 1; min-width: 140px; text-align: center; padding: 20px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px;">
+                    <div style="width: 50px; height: 50px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.5em; margin: 0 auto 10px;">5</div>
+                    <h4 style="margin: 10px 0 5px; color: var(--text-primary);">Detailed Reports</h4>
+                    <p style="font-size: 0.85em; color: var(--text-muted); margin: 0;">Full transparency (MD + HTML)</p>
+                </div>
             </div>
-            <div class="method-card">
-                <h3>🔧 Open Source Tools</h3>
-                <ul>
-                    <li><strong>Semgrep</strong> — Security analysis and pattern matching</li>
-                    <li><strong>Clippy</strong> — Rust linting and idiom checking</li>
-                    <li><strong>ESLint</strong> — JavaScript/TypeScript quality analysis</li>
-                    <li><strong>Ruff</strong> — Python linting (fast, comprehensive)</li>
-                    <li><strong>Bandit</strong> — Python security analysis</li>
-                    <li><strong>Custom test harnesses</strong> — Functional correctness via unit tests</li>
-                    <li><strong>cargo bench / pytest-benchmark</strong> — Performance evaluation</li>
-                </ul>
+        </div>
+
+        <!-- SCORING DIMENSIONS -->
+        <div style="margin-top: 40px;">
+            <h3 style="text-align: center; color: var(--accent); margin-bottom: 25px;">🎯 Scoring Dimensions (100 Points Total)</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                <div style="background: var(--bg-secondary); padding: 20px; border-radius: 6px; border: 1px solid var(--border);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <div style="font-size: 2em;">✓</div>
+                        <h4 style="margin: 0; color: var(--text-primary);">Compilation (25%)</h4>
+                    </div>
+                    <p style="font-size: 0.9em; color: var(--text-muted); margin: 0;">Does it compile with rustc? Pass/fail verification.</p>
+                </div>
+                <div style="background: var(--bg-secondary); padding: 20px; border-radius: 6px; border: 1px solid var(--border);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <div style="font-size: 2em;">🛡️</div>
+                        <h4 style="margin: 0; color: var(--text-primary);">Safety (20%)</h4>
+                    </div>
+                    <p style="font-size: 0.9em; color: var(--text-muted); margin: 0;">Memory safety: unsafe blocks, error handling, Option types.</p>
+                </div>
+                <div style="background: var(--bg-secondary); padding: 20px; border-radius: 6px; border: 1px solid var(--border);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <div style="font-size: 2em;">✨</div>
+                        <h4 style="margin: 0; color: var(--text-primary);">Quality (20%)</h4>
+                    </div>
+                    <p style="font-size: 0.9em; color: var(--text-muted); margin: 0;">Idiomatic Rust patterns, documentation, naming conventions.</p>
+                </div>
+                <div style="background: var(--bg-secondary); padding: 20px; border-radius: 6px; border: 1px solid var(--border);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <div style="font-size: 2em;">✔️</div>
+                        <h4 style="margin: 0; color: var(--text-primary);">Correctness (15%)</h4>
+                    </div>
+                    <p style="font-size: 0.9em; color: var(--text-muted); margin: 0;">Functional equivalence, edge case handling, unit tests.</p>
+                </div>
+                <div style="background: var(--bg-secondary); padding: 20px; border-radius: 6px; border: 1px solid var(--border);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <div style="font-size: 2em;">🔧</div>
+                        <h4 style="margin: 0; color: var(--text-primary);">Maintainability (10%)</h4>
+                    </div>
+                    <p style="font-size: 0.9em; color: var(--text-muted); margin: 0;">Code organization, public API clarity, modularity.</p>
+                </div>
+                <div style="background: var(--bg-secondary); padding: 20px; border-radius: 6px; border: 1px solid var(--border);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <div style="font-size: 2em;">⚡</div>
+                        <h4 style="margin: 0; color: var(--text-primary);">Performance (10%)</h4>
+                    </div>
+                    <p style="font-size: 0.9em; color: var(--text-muted); margin: 0;">Efficiency patterns: minimal cloning, reference usage.</p>
+                </div>
             </div>
-            <div class="method-card">
-                <h3>🎯 Task Types</h3>
-                <ul>
-                    <li><strong>Function Completion</strong> — Given a signature and docstring, generate implementation</li>
-                    <li><strong>Bug Finding</strong> — Identify intentionally seeded bugs in real code</li>
-                    <li><strong>Code Review</strong> — Provide meaningful review of a pull request diff</li>
-                    <li><strong>Security Audit</strong> — Identify vulnerabilities in code samples</li>
-                    <li><strong>Doc Generation</strong> — Generate documentation for undocumented code</li>
-                    <li><strong>Refactoring</strong> — Improve deliberately messy code maintaining behavior</li>
-                    <li><strong>Cross-Language Port</strong> — Translate between JS/Python and Rust</li>
-                </ul>
-            </div>
-            <div class="method-card">
-                <h3>🔑 Key Principles</h3>
-                <ul>
-                    <li><strong>Reproducibility</strong> — All prompts, configs, and evaluation scripts are public</li>
-                    <li><strong>Determinism</strong> — Temperature=0 for all evaluations</li>
-                    <li><strong>Real-world code</strong> — Tasks extracted from actual open-source projects</li>
-                    <li><strong>OSI-approved tools only</strong> — No proprietary analysis engines</li>
-                    <li><strong>Community governance</strong> — Open methodology, open contributions</li>
-                    <li><strong>Version tracking</strong> — Every model version tested and tracked over time</li>
-                </ul>
+        </div>
+
+        <!-- KEY PRINCIPLES -->
+        <div style="margin-top: 40px;">
+            <h3 style="text-align: center; color: var(--accent); margin-bottom: 25px;">🔑 Key Principles</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                <div style="background: var(--bg-secondary); padding: 15px; border-radius: 6px; border-left: 3px solid var(--accent);">
+                    <strong>Reproducibility</strong> — All prompts, configs, and evaluation scripts are public
+                </div>
+                <div style="background: var(--bg-secondary); padding: 15px; border-radius: 6px; border-left: 3px solid var(--accent);">
+                    <strong>Real Compilation</strong> — Uses rustc 1.93+ for actual verification (not syntax check)
+                </div>
+                <div style="background: var(--bg-secondary); padding: 15px; border-radius: 6px; border-left: 3px solid var(--accent);">
+                    <strong>Transparency</strong> — Full source code, generated output, and errors in every report
+                </div>
+                <div style="background: var(--bg-secondary); padding: 15px; border-radius: 6px; border-left: 3px solid var(--accent);">
+                    <strong>Config-Driven</strong> — Add models/projects by editing YAML files (no code changes)
+                </div>
+                <div style="background: var(--bg-secondary); padding: 15px; border-radius: 6px; border-left: 3px solid var(--accent);">
+                    <strong>Open Source</strong> — Apache 2.0 license, community contributions welcome
+                </div>
+                <div style="background: var(--bg-secondary); padding: 15px; border-radius: 6px; border-left: 3px solid var(--accent);">
+                    <strong>Extensible</strong> — Modular provider pattern supports any LLM API
+                </div>
             </div>
         </div>
     </div>
@@ -736,7 +797,8 @@
     <div class="section" id="projects">
         <div class="section-header">
             <h2>📁 Test Projects</h2>
-            <p>CELLO evaluates LLMs against real open-source repositories spanning multiple languages, paradigms, and complexity levels.</p>
+            <p>Current proof-of-concept: 3 C infrastructure projects (1.7KB - 3.3KB) for C → Rust transpilation evaluation.</p>
+            <p style="font-size: 0.9em; color: var(--text-muted); margin-top: 0.5rem;">⚠️ <strong>Note:</strong> The D3.js, matplotlib projects below are aspirational future goals. Current evaluations use the 3 small C test files (string_utils, buffer, hashmap) available in the <a href="https://github.com/aosf-org/cello/tree/main/test-projects/c" style="color: var(--accent);">GitHub repository</a>.</p>
         </div>
         <div class="method-grid">
             <div class="project-card">
@@ -843,8 +905,8 @@
 <footer>
     <p><strong>CELLO</strong> — Code Evaluation LLM Leaderboard (Open)</p>
     <p style="margin-top:0.5rem;">
-        <a href="https://github.com/agentic-osf/cello">GitHub</a> · 
-        Open Source · MIT License · 
+        <a href="https://github.com/aosf-org/cello">GitHub</a> · 
+        Open Source · Apache 2.0 License · 
         Built with 100% OSI-Approved Tools
     </p>
     <p style="margin-top:0.5rem; font-size:0.75rem;">

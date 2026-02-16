@@ -1,0 +1,49 @@
+{
+  "project": "buffer",
+  "timestamp": "2026-02-16T12:12:34.564677",
+  "c_code_size": 1997,
+  "evaluations": {
+    "claude": {
+      "rust_code": "/// Dynamic buffer implementation for managing growable byte arrays\npub struct Buffer {\n    data: Vec<u8>,\n}\n\nimpl Buffer {\n    /// Initialize a new buffer with initial capacity\n    pub fn new(initial_capacity: usize) -> Self {\n        Buffer {\n            data: Vec::with_capacity(initial_capacity),\n        }\n    }\n\n    /// Append data to buffer\n    pub fn append(&mut self, data: &[u8]) -> Result<(), BufferError> {\n        self.data.extend_from_slice(data);\n        Ok(())\n    }\n\n    /// Append a string to buffer\n    pub fn append_str(&mut self, s: &str) -> Result<(), BufferError> {\n        self.append(s.as_bytes())\n    }\n\n    /// Clear buffer contents\n    pub fn clear(&mut self) {\n        self.data.clear();\n    }\n\n    /// Get current buffer contents as C string (null-terminated)\n    pub fn as_cstr(&self) -> Option<&std::ffi::CStr> {\n        if self.data.is_empty() || self.data.last() != Some(&0) {\n            return None;\n        }\n        std::ffi::CStr::from_bytes_with_nul(&self.data).ok()\n    }\n\n    /// Get current buffer contents as byte slice\n    pub fn as_bytes(&self) -> &[u8] {\n        &self.data\n    }\n\n    /// Get current buffer contents as string slice if valid UTF-8\n    pub fn as_str(&self) -> Result<&str, std::str::Utf8Error> {\n        std::str::from_utf8(&self.data)\n    }\n\n    /// Get current size of buffer\n    pub fn size(&self) -> usize {\n        self.data.len()\n    }\n\n    /// Get current capacity of buffer\n    pub fn capacity(&self) -> usize {\n        self.data.capacity()\n    }\n}\n\nimpl Default for Buffer {\n    fn default() -> Self {\n        Self::new(0)\n    }\n}\n\n#[derive(Debug, Clone, Copy, PartialEq, Eq)]\npub enum BufferError {\n    AllocationFailed,\n}\n\nimpl std::fmt::Display for BufferError {\n    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n        match self {\n            BufferError::AllocationFailed => write!(f, \"Buffer allocation failed\"),\n        }\n    }\n}\n\nimpl std::error::Error for BufferError {}",
+      "rust_code_size": 1976,
+      "scores": {
+        "compilation": 25,
+        "safety": 18,
+        "quality": 14,
+        "correctness": 7,
+        "maintainability": 3,
+        "performance": 10,
+        "details": {
+          "compilation": "\u2713 Compiles successfully",
+          "safety": "\u2713 No unsafe blocks | \u2713 Uses Result for error handling | \u2713 Uses Option for nullable values",
+          "quality": "\u2713 Snake_case naming | \u2713 Well documented (10 doc comments) | \u2713 Proper type definitions | \u2713 Implementation blocks",
+          "correctness": "\u2713 Edge case checks | \u2713 Pattern matching",
+          "maintainability": "\u2713 Clear public API (10 items)",
+          "performance": "\u2713 Minimal cloning | \u2713 Reference usage"
+        },
+        "total": 77
+      }
+    },
+    "gemini": {
+      "rust_code": "use std::alloc::{alloc, dealloc, realloc, Layout};\nuse std::ffi::{CStr, CString, NulError};\nuse std::os::raw::c_char;\nuse std::ptr;\nuse std::str;\n\n/// Represents a dynamic buffer.\npub struct Buffer {\n    data: *mut c_char,\n    size: usize,\n    capacity: usize,\n}\n\nimpl Buffer {\n    /// Initializes a new buffer with an initial capacity.\n    pub fn new(initial_capacity: usize) -> Result<Self, &'static str> {\n        let layout = Layout::array::<c_char>(initial_capacity).map_err(|_| \"Invalid capacity\")?;\n        let data = unsafe { alloc(layout) as *mut c_char };\n\n        if data.is_null() {\n            return Err(\"Failed to allocate buffer\");\n        }\n\n        unsafe {\n            data.write(0 as c_char); // Null terminate\n        }\n\n        Ok(Buffer {\n            data,\n            size: 0,\n            capacity: initial_capacity,\n        })\n    }\n\n    /// Grows the buffer capacity (doubles current capacity, but at least 16).\n    fn grow(&mut self) -> Result<(), &'static str> {\n        let new_capacity = std::cmp::max(self.capacity * 2, 16);\n        let old_layout = Layout::array::<c_char>(self.capacity).map_err(|_| \"Invalid capacity\")?;\n        let new_layout = Layout::array::<c_char>(new_capacity).map_err(|_| \"Invalid capacity\")?;\n\n        let new_data = unsafe {\n            realloc(self.data as *mut u8, old_layout, new_capacity) as *mut c_char\n        };\n\n        if new_data.is_null() {\n            return Err(\"Failed to reallocate buffer\");\n        }\n\n        self.data = new_data;\n        self.capacity = new_capacity;\n        Ok(())\n    }\n\n    /// Appends data to the buffer.\n    pub fn append(&mut self, data: &[u8]) -> Result<(), &'static str> {\n        if self.size + data.len() + 1 > self.capacity {\n            self.grow()?;\n        }\n\n        unsafe {\n            ptr::copy_nonoverlapping(\n                data.as_ptr() as *const c_char,\n                self.data.add(self.size),\n                data.len(),\n            );\n            self.size += data.len();\n            self.data.add(self.size).write(0); // Null terminate\n        }\n\n        Ok(())\n    }\n\n    /// Appends a string to the buffer.\n    pub fn append_str(&mut self, str: &str) -> Result<(), &'static str> {\n        self.append(str.as_bytes())\n    }\n\n    /// Clears the buffer contents.\n    pub fn clear(&mut self) {\n        self.size = 0;\n        if !self.data.is_null() {\n            unsafe {\n                self.data.write(0);\n            }\n        }\n    }\n\n    /// Returns the current buffer contents as a C string.\n    pub fn c_str(&self) -> *const c_char {\n        self.data as *const c_char\n    }\n\n    /// Returns the current buffer contents as a Rust String.\n    pub fn to_string(&self) -> Result<String, str::Utf8Error> {\n        let c_str = unsafe { CStr::from_ptr(self.c_str()) };\n        c_str.to_str().map(|s| s.to_string())\n    }\n}\n\nimpl Drop for Buffer {\n    /// Frees the buffer and its data.\n    fn drop(&mut self) {\n        if !self.data.is_null() {\n            let layout = Layout::array::<c_char>(self.capacity).unwrap();\n            unsafe {\n                dealloc(self.data as *mut u8, layout);\n            }\n            self.data = ptr::null_mut();\n            self.size = 0;\n            self.capacity = 0;\n        }\n    }\n}",
+      "rust_code_size": 3246,
+      "scores": {
+        "compilation": 25,
+        "safety": 2,
+        "quality": 20,
+        "correctness": 4,
+        "maintainability": 5,
+        "performance": 10,
+        "details": {
+          "compilation": "\u2713 Compiles successfully",
+          "safety": "\u2717 Heavy unsafe usage (7 blocks) | \u2713 Uses Result for error handling | \u26a0 Uses raw pointers",
+          "quality": "\u2713 Snake_case naming | \u2713 Well documented (9 doc comments) | \u2713 Uses ? operator | \u2713 Functional programming patterns | \u2713 Proper type definitions | \u2713 Implementation blocks",
+          "correctness": "\u2713 Edge case checks",
+          "maintainability": "\u2713 Clear public API (7 items) | \u2713 Uses constants",
+          "performance": "\u2713 Minimal cloning | \u2713 Reference usage"
+        },
+        "total": 66
+      }
+    }
+  }
+}

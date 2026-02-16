@@ -1,0 +1,49 @@
+{
+  "project": "string_utils",
+  "timestamp": "2026-02-16T12:12:23.821239",
+  "c_code_size": 1768,
+  "evaluations": {
+    "claude": {
+      "rust_code": "/// Duplicate a string\n/// Returns Some(String) or None if the input is None\npub fn str_duplicate(src: Option<&str>) -> Option<String> {\n    src.map(|s| s.to_string())\n}\n\n/// Trim whitespace from both ends of a string\n/// Returns a new String with whitespace removed, or None if input is None\npub fn str_trim(s: Option<String>) -> Option<String> {\n    s.map(|string| string.trim().to_string())\n}\n\n/// Convert string to lowercase\n/// Modifies string in place by returning a new lowercase String\npub fn str_tolower(s: Option<String>) -> Option<String> {\n    s.map(|string| string.to_lowercase())\n}\n\n/// Safe string concatenation with buffer size limit\n/// Returns Ok(()) on success, Err with message on overflow or invalid input\npub fn str_concat(dst: &mut String, dst_size: usize, src: &str) -> Result<(), String> {\n    let new_len = dst.len() + src.len();\n    \n    if new_len > dst_size {\n        return Err(\"Buffer overflow: concatenation would exceed size limit\".to_string());\n    }\n    \n    dst.push_str(src);\n    Ok(())\n}\n\n/// Count occurrences of a character in a string\n/// Returns the count, or 0 if the input is None\npub fn str_count_char(s: Option<&str>, c: char) -> usize {\n    match s {\n        Some(string) => string.chars().filter(|&ch| ch == c).count(),\n        None => 0,\n    }\n}",
+      "rust_code_size": 1294,
+      "scores": {
+        "compilation": 25,
+        "safety": 18,
+        "quality": 13,
+        "correctness": 7,
+        "maintainability": 3,
+        "performance": 10,
+        "details": {
+          "compilation": "\u2713 Compiles successfully",
+          "safety": "\u2713 No unsafe blocks | \u2713 Uses Result for error handling | \u2713 Uses Option for nullable values",
+          "quality": "\u2713 Snake_case naming | \u2713 Well documented (10 doc comments) | \u2713 Functional programming patterns",
+          "correctness": "\u2713 Edge case checks | \u2713 Pattern matching",
+          "maintainability": "\u2713 Clear public API (5 items)",
+          "performance": "\u2713 Minimal cloning | \u2713 Reference usage"
+        },
+        "total": 76
+      }
+    },
+    "gemini": {
+      "rust_code": "use std::{ffi::CString, os::raw::c_char};\n\n/// Duplicate a string (like strdup)\n/// Returns allocated string or an error on failure\npub fn str_duplicate(src: &str) -> Result<CString, std::ffi::NulError> {\n    CString::new(src)\n}\n\n/// Trim whitespace from both ends of a string\n/// Returns a new String with the trimmed content.\npub fn str_trim(s: &str) -> String {\n    s.trim().to_string()\n}\n\n/// Convert string to lowercase\n/// Returns a new String with the lowercase content.\npub fn str_tolower(s: &str) -> String {\n    s.to_lowercase()\n}\n\n/// Safe string concatenation with buffer size\n/// Returns Ok on success, Err on overflow\npub fn str_concat(dst: &mut String, src: &str, dst_size: usize) -> Result<(), String> {\n    if dst.len() + src.len() + 1 > dst_size {\n        return Err(\"Would overflow\".to_string());\n    }\n\n    dst.push_str(src);\n    Ok(())\n}\n\n/// Count occurrences of a character in a string\npub fn str_count_char(s: &str, c: char) -> usize {\n    s.chars().filter(|&x| x == c).count()\n}\n\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    #[test]\n    fn test_str_duplicate() {\n        let src = \"hello\";\n        let result = str_duplicate(src).unwrap();\n        assert_eq!(result.to_str().unwrap(), src);\n    }\n\n    #[test]\n    fn test_str_trim() {\n        let src = \"  hello  \";\n        let result = str_trim(src);\n        assert_eq!(result, \"hello\");\n    }\n\n    #[test]\n    fn test_str_tolower() {\n        let src = \"Hello\";\n        let result = str_tolower(src);\n        assert_eq!(result, \"hello\");\n    }\n\n    #[test]\n    fn test_str_concat() {\n        let mut dst = String::from(\"hello\");\n        let src = \" world\";\n        let dst_size = 20;\n        let result = str_concat(&mut dst, src, dst_size);\n        assert!(result.is_ok());\n        assert_eq!(dst, \"hello world\");\n\n        let mut dst = String::from(\"hello\");\n        let src = \" world\";\n        let dst_size = 10;\n        let result = str_concat(&mut dst, src, dst_size);\n        assert!(result.is_err());\n    }\n\n    #[test]\n    fn test_str_count_char() {\n        let src = \"hello world\";\n        let c = 'l';\n        let result = str_count_char(src, c);\n        assert_eq!(result, 3);\n    }\n}",
+      "rust_code_size": 2174,
+      "scores": {
+        "compilation": 25,
+        "safety": 15,
+        "quality": 13,
+        "correctness": 12,
+        "maintainability": 6,
+        "performance": 10,
+        "details": {
+          "compilation": "\u2713 Compiles successfully",
+          "safety": "\u2713 No unsafe blocks | \u2713 Uses Result for error handling",
+          "quality": "\u2713 Snake_case naming | \u2713 Well documented (9 doc comments) | \u2713 Functional programming patterns",
+          "correctness": "\u2713 Includes tests | \u2713 Edge case checks",
+          "maintainability": "\u2713 Modular structure | \u2713 Clear public API (5 items)",
+          "performance": "\u2713 Minimal cloning | \u2713 Reference usage"
+        },
+        "total": 81
+      }
+    }
+  }
+}

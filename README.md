@@ -51,6 +51,56 @@ CELLO is an open source benchmark for evaluating LLM code transpilation quality.
 5. **Maintainability (10%)** — Code organization, public API clarity
 6. **Performance (10%)** — Efficiency patterns (minimal cloning, references)
 
+## Quick Start
+
+**View the website:**
+```
+https://aosf-org.github.io/cello/
+```
+
+**Reproduce evaluations:**
+```bash
+# Install Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Install dependencies
+cd evaluations && pip install -r requirements.txt
+
+# Configure API keys
+cp .env.example .env
+# Edit .env with your keys
+
+# Run evaluation
+python run_evaluation.py --all
+```
+
+📖 See [QUICKSTART.md](QUICKSTART.md) for detailed setup  
+📖 See [EVALUATION.md](EVALUATION.md) for complete evaluation guide
+
+## Scalable Framework
+
+CELLO uses a **config-driven architecture** for easy expansion:
+
+### Add a New Model
+
+Just edit `config/models.yaml` (no code changes):
+
+```yaml
+gpt-4o:
+  name: "GPT-4o"
+  provider: openai
+  model_id: "gpt-4o"
+  api_key_env: "OPENAI_API_KEY"
+  enabled: true
+```
+
+### Add a New Project
+
+1. Add C file to `test-projects/c/`
+2. Add entry to `config/projects.yaml`
+
+That's it! The framework handles the rest.
+
 ## Deploy to GitHub Pages
 
 ### Option 1: Direct deployment
@@ -109,14 +159,47 @@ Each report includes:
 
 ```
 cello/
-├── index.html       # Main leaderboard page
-├── reports/         # Detailed evaluation reports (markdown)
-│   ├── index.html   # Reports index
-│   └── *.md         # Individual evaluation reports
-└── README.md        # This file
+├── README.md                    # This file
+├── QUICKSTART.md                # 5-minute setup guide
+├── EVALUATION.md                # Detailed evaluation guide
+├── index.html                   # Main leaderboard website
+├── .gitignore                   # Excludes .env and build artifacts
+│
+├── config/                      # Configuration files (edit to customize)
+│   ├── models.yaml              # Model definitions
+│   ├── projects.yaml            # Test projects catalog
+│   └── evaluation.yaml          # Scoring dimensions & prompts
+│
+├── evaluations/                 # Evaluation framework
+│   ├── framework/               # Core modules
+│   │   ├── config_loader.py    # YAML config loader
+│   │   └── ...
+│   ├── providers/               # LLM provider adapters
+│   │   ├── base_provider.py    # Abstract interface
+│   │   ├── anthropic_provider.py
+│   │   ├── google_provider.py
+│   │   └── ...
+│   ├── run_evaluation.py        # Main CLI entry point
+│   ├── requirements.txt         # Python dependencies
+│   └── .env.example             # API key template (NO REAL KEYS)
+│
+├── test-projects/               # Test code
+│   └── c/                       # C source files
+│       ├── string_utils.c
+│       ├── buffer.c
+│       └── hashmap.c
+│
+├── results/                     # Evaluation results (JSON)
+│   └── 2026-02-16-poc/          # Example POC run
+│       └── *.json
+│
+└── reports/                     # Generated reports (MD + HTML)
+    ├── index.html               # Reports index
+    ├── *.md                     # Markdown versions
+    └── *.html                   # HTML versions
 ```
 
-The main site is a single HTML file with embedded CSS and JavaScript. Reports are standalone markdown files.
+The framework is **modular** and **config-driven** — add new models or projects by editing YAML files, no code changes needed.
 
 ## Tech Stack
 

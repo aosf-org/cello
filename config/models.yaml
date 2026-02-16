@@ -1,0 +1,30 @@
+# CELLO Model Configuration
+# Add new models here - no code changes needed!
+
+models:
+  claude-sonnet-4.5:
+    name: "Claude Sonnet 4.5"
+    provider: anthropic
+    model_id: "claude-sonnet-4-5-20250929"
+    api_key_env: "ANTHROPIC_API_KEY"
+    max_tokens: 4000
+    temperature: 0.1
+    enabled: true
+
+  gemini-2.0-flash:
+    name: "Gemini 2.0 Flash"
+    provider: google
+    model_id: "gemini-2.0-flash"
+    api_key_env: "GEMINI_API_KEY"
+    temperature: 0.1
+    enabled: true
+
+  # Future models (disabled for now)
+  # gpt-4o:
+  #   name: "GPT-4o"
+  #   provider: openai
+  #   model_id: "gpt-4o"
+  #   api_key_env: "OPENAI_API_KEY"
+  #   max_tokens: 4000
+  #   temperature: 0.1
+  #   enabled: false

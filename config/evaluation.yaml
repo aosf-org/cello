@@ -1,0 +1,55 @@
+# CELLO Evaluation Configuration
+
+scoring:
+  dimensions:
+    compilation:
+      weight: 25
+      description: "Does the code compile?"
+      
+    safety:
+      weight: 20
+      description: "Memory safety improvements (unsafe blocks, error handling)"
+      
+    quality:
+      weight: 20
+      description: "Idiomatic patterns, documentation, naming conventions"
+      
+    correctness:
+      weight: 15
+      description: "Functional equivalence, edge case handling, tests"
+      
+    maintainability:
+      weight: 10
+      description: "Code organization, public API clarity, modularity"
+      
+    performance:
+      weight: 10
+      description: "Efficiency patterns (minimal cloning, reference usage)"
+
+  total_points: 100
+
+compilation:
+  timeout_seconds: 30
+  compiler: rustc
+  flags: ["--crate-type", "lib"]
+
+transpilation:
+  prompt_template: |
+    You are an expert systems programmer tasked with transpiling C code to idiomatic, safe Rust.
+    
+    Requirements:
+    1. Translate the C code to Rust that is functionally equivalent
+    2. Use idiomatic Rust patterns (Result for errors, Option for nullables, etc.)
+    3. Minimize or eliminate unsafe blocks where possible
+    4. Add appropriate documentation
+    5. Use proper Rust naming conventions (snake_case for functions/variables)
+    6. Implement proper memory safety without relying on unsafe
+    7. Add error handling using Result types
+    
+    Please transpile this C code to Rust. Provide ONLY the Rust code, no explanations:
+    
+    ```c
+    {c_code}
+    ```
+    
+    Respond with the Rust code only, wrapped in ```rust blocks.
