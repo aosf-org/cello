@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CELLO Report: hashmap</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+            color: #c9d1d9;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #30363d;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            color: #58a6ff;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #8b949e;
+            font-size: 1.1em;
+        }
+        
+        .back-link {
+            display: inline-block;
+            color: #58a6ff;
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .section {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #58a6ff;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        h3 {
+            color: #58a6ff;
+            margin: 25px 0 15px 0;
+            font-size: 1.3em;
+        }
+        
+        pre {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: #0d1117;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #30363d;
+        }
+        
+        th {
+            background: #0d1117;
+            color: #58a6ff;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #0d1117;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .badge-success {
+            background: #238636;
+            color: white;
+        }
+        
+        .badge-error {
+            background: #da3633;
+            color: white;
+        }
+        
+        .badge-warning {
+            background: #f59e0b;
+            color: #0d1117;
+        }
+        
+        .score-card {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .score-header {
+            font-size: 1.5em;
+            color: #58a6ff;
+            margin-bottom: 15px;
+        }
+        
+        ul {
+            margin-left: 20px;
+            color: #8b949e;
+        }
+        
+        ul li {
+            margin: 5px 0;
+        }
+        
+        .comparison-table {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Reports Index</a>
+        
+        <header>
+            <h1>CELLO Evaluation Report: hashmap</h1>
+            <p class="subtitle">Generated: 2026-02-16T12:12:48.696813</p>
+        </header>
+
+        <div class="section">
+            <h2>Original C Code (3297 bytes)</h2>
+            <pre><code>/* Simple hash map implementation - fundamental data structure */
+
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+#define HASHMAP_INITIAL_CAPACITY 16
+
+typedef struct HashMapEntry {
+    char* key;
+    void* value;
+    struct HashMapEntry* next;
+} HashMapEntry;
+
+typedef struct {
+    HashMapEntry** buckets;
+    size_t capacity;
+    size_t size;
+} HashMap;
+
+/**
+ * Simple hash function (djb2)
+ */
+static unsigned long hash_string(const char* str) {
+    unsigned long hash = 5381;
+    int c;
+    while ((c = *str++)) {
+        hash = ((hash &lt;&lt; 5) + hash) + c;
+    }
+    return hash;
+}
+
+/**
+ * Create a new hash map
+ */
+HashMap* hashmap_new(void) {
+    HashMap* map = (HashMap*)malloc(sizeof(HashMap));
+    if (!map) return NULL;
+    
+    map-&gt;capacity = HASHMAP_INITIAL_CAPACITY;
+    map-&gt;size = 0;
+    map-&gt;buckets = (HashMapEntry**)calloc(map-&gt;capacity, sizeof(HashMapEntry*));
+    
+    if (!map-&gt;buckets) {
+        free(map);
+        return NULL;
+    }
+    
+    return map;
+}
+
+/**
+ * Insert or update a key-value pair
+ */
+int hashmap_put(HashMap* map, const char* key, void* value) {
+    if (!map || !key) return -1;
+    
+    unsigned long hash = hash_string(key);
+    size_t index = hash % map-&gt;capacity;
+    
+    // Check if key exists
+    HashMapEntry* entry = map-&gt;buckets[index];
+    while (entry) {
+        if (strcmp(entry-&gt;key, key) == 0) {
+            entry-&gt;value = value;
+            return 0;
+        }
+        entry = entry-&gt;next;
+    }
+    
+    // Create new entry
+    HashMapEntry* new_entry = (HashMapEntry*)malloc(sizeof(HashMapEntry));
+    if (!new_entry) return -1;
+    
+    new_entry-&gt;key = strdup(key);
+    if (!new_entry-&gt;key) {
+        free(new_entry);
+        return -1;
+    }
+    
+    new_entry-&gt;value = value;
+    new_entry-&gt;next = map-&gt;buckets[index];
+    map-&gt;buckets[index] = new_entry;
+    map-&gt;size++;
+    
+    return 0;
+}
+
+/**
+ * Get value for a key
+ */
+void* hashmap_get(HashMap* map, const char* key) {
+    if (!map || !key) return NULL;
+    
+    unsigned long hash = hash_string(key);
+    size_t index = hash % map-&gt;capacity;
+    
+    HashMapEntry* entry = map-&gt;buckets[index];
+    while (entry) {
+        if (strcmp(entry-&gt;key, key) == 0) {
+            return entry-&gt;value;
+        }
+        entry = entry-&gt;next;
+    }
+    
+    return NULL;
+}
+
+/**
+ * Remove a key-value pair
+ */
+int hashmap_remove(HashMap* map, const char* key) {
+    if (!map || !key) return -1;
+    
+    unsigned long hash = hash_string(key);
+    size_t index = hash % map-&gt;capacity;
+    
+    HashMapEntry** indirect = &amp;map-&gt;buckets[index];
+    HashMapEntry* entry = *indirect;
+    
+    while (entry) {
+        if (strcmp(entry-&gt;key, key) == 0) {
+            *indirect = entry-&gt;next;
+            free(entry-&gt;key);
+            free(entry);
+            map-&gt;size--;
+            return 0;
+        }
+        indirect = &amp;entry-&gt;next;
+        entry = entry-&gt;next;
+    }
+    
+    return -1;
+}
+
+/**
+ * Free hash map and all entries
+ */
+void hashmap_free(HashMap* map) {
+    if (!map) return;
+    
+    for (size_t i = 0; i &lt; map-&gt;capacity; i++) {
+        HashMapEntry* entry = map-&gt;buckets[i];
+        while (entry) {
+            HashMapEntry* next = entry-&gt;next;
+            free(entry-&gt;key);
+            free(entry);
+            entry = next;
+        }
+    }
+    
+    free(map-&gt;buckets);
+    free(map);
+}
+</code></pre>
+        </div>
+
+        <div class="section">
+            <h2>CLAUDE Transpilation</h2>
+
+            <div class="score-card">
+                <div class="score-header">Overall Score: 53/100</div>
+                <table>
+                    <tr>
+                        <th>Dimension</th>
+                        <th>Score</th>
+                        <th>Max</th>
+                        <th>Details</th>
+                    </tr>
+                    <tr>
+                        <td>Compilation</td>
+                        <td><strong>0</strong></td>
+                        <td>25</td>
+                        <td>✗ Compilation errors: warning: unused import: `std::collections::hash_map::DefaultHasher`
+ --&gt; /var/folders/hd/dlntwdzx0rg8g8z7x52tdkp80000gn/T/tmpnhftkqi6/lib.rs:1:5
+  |
+1 | use std::collections::hash_map::DefaultHasher;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `Hash` and `Hasher`
+ --&gt; /var/folders/hd/dlntwdzx0rg8g8z7x52tdkp80000gn/T/tmpnhftkqi6/lib.rs:2:17
+  |
+2 | use std::hash::{Hash, Hasher};
+  |                 ^^^^  ^^^^^^
+
+error[E0506]: cannot assign to `*current` because it is borrowed
+   --&gt; /var/folders/hd/dlntwdzx0rg8g8z7x52tdkp80000gn/T/tmpnhftkqi6/lib.rs:118:25
+    |
+116 |                 Some(entry) =&gt; {
+    |                      ----- `*current` is borrowed here
+117 |                     if entry.key == key {
+118 |                         *current = entry.next.take();
+    |                         ^^^^^^^^
+    |                         |
+    |                         `*current` is assigned to here but it was already borrowed
+    |                         borrow later used here
+
+error: aborting due to 1 previous error; 2 warnings emitted
+
+For more information about this error, try `rustc --explain E0506`.
+</td>
+                    </tr>
+                    <tr>
+                        <td>Safety</td>
+                        <td><strong>20</strong></td>
+                        <td>20</td>
+                        <td>✓ No unsafe blocks | ✓ Uses Result for error handling | ✓ Uses Option for nullable values | ✓ Smart pointer usage</td>
+                    </tr>
+                    <tr>
+                        <td>Quality</td>
+                        <td><strong>15</strong></td>
+                        <td>20</td>
+                        <td>✓ Snake_case naming | ✓ Well documented (10 doc comments) | ✓ Functional programming patterns | ✓ Proper type definitions</td>
+                    </tr>
+                    <tr>
+                        <td>Correctness</td>
+                        <td><strong>3</strong></td>
+                        <td>15</td>
+                        <td>✓ Pattern matching</td>
+                    </tr>
+                    <tr>
+                        <td>Maintainability</td>
+                        <td><strong>5</strong></td>
+                        <td>10</td>
+                        <td>✓ Clear public API (8 items) | ✓ Uses constants</td>
+                    </tr>
+                    <tr>
+                        <td>Performance</td>
+                        <td><strong>10</strong></td>
+                        <td>10</td>
+                        <td>✓ Minimal cloning | ✓ Reference usage</td>
+                    </tr>
+                </table>
+            </div>
+
+            <p class="badge badge-error">❌ Compilation: FAILED</p>
+            <h3>Compilation Errors</h3>
+            <pre><code>✗ Compilation errors: warning: unused import: `std::collections::hash_map::DefaultHasher`
+ --&gt; /var/folders/hd/dlntwdzx0rg8g8z7x52tdkp80000gn/T/tmpnhftkqi6/lib.rs:1:5
+  |
+1 | use std::collections::hash_map::DefaultHasher;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `Hash` and `Hasher`
+ --&gt; /var/folders/hd/dlntwdzx0rg8g8z7x52tdkp80000gn/T/tmpnhftkqi6/lib.rs:2:17
+  |
+2 | use std::hash::{Hash, Hasher};
+  |                 ^^^^  ^^^^^^
+
+error[E0506]: cannot assign to `*current` because it is borrowed
+   --&gt; /var/folders/hd/dlntwdzx0rg8g8z7x52tdkp80000gn/T/tmpnhftkqi6/lib.rs:118:25
+    |
+116 |                 Some(entry) =&gt; {
+    |                      ----- `*current` is borrowed here
+117 |                     if entry.key == key {
+118 |                         *current = entry.next.take();
+    |                         ^^^^^^^^
+    |                         |
+    |                         `*current` is assigned to here but it was already borrowed
+    |                         borrow later used here
+
+error: aborting due to 1 previous error; 2 warnings emitted
+
+For more information about this error, try `rustc --explain E0506`.
+</code></pre>
+
+            <h3>Generated Rust Code (3738 bytes)</h3>
+            <pre><code>use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
+
+const HASHMAP_INITIAL_CAPACITY: usize = 16;
+
+/// Entry in the hash map containing a key-value pair and pointer to next entry
+struct HashMapEntry&lt;T&gt; {
+    key: String,
+    value: T,
+    next: Option&lt;Box&lt;HashMapEntry&lt;T&gt;&gt;&gt;,
+}
+
+/// Simple hash map implementation using separate chaining
+pub struct HashMap&lt;T&gt; {
+    buckets: Vec&lt;Option&lt;Box&lt;HashMapEntry&lt;T&gt;&gt;&gt;&gt;,
+    capacity: usize,
+    size: usize,
+}
+
+/// Simple hash function (djb2)
+fn hash_string(s: &amp;str) -&gt; u64 {
+    let mut hash: u64 = 5381;
+    for c in s.bytes() {
+        hash = hash.wrapping_shl(5).wrapping_add(hash).wrapping_add(c as u64);
+    }
+    hash
+}
+
+impl&lt;T&gt; HashMap&lt;T&gt; {
+    /// Create a new hash map
+    pub fn new() -&gt; Self {
+        HashMap {
+            buckets: (0..HASHMAP_INITIAL_CAPACITY).map(|_| None).collect(),
+            capacity: HASHMAP_INITIAL_CAPACITY,
+            size: 0,
+        }
+    }
+
+    /// Insert or update a key-value pair
+    pub fn put(&amp;mut self, key: &amp;str, value: T) -&gt; Result&lt;(), String&gt; {
+        let hash = hash_string(key);
+        let index = (hash % self.capacity as u64) as usize;
+
+        let mut current = &amp;mut self.buckets[index];
+
+        // Check if key exists and update
+        loop {
+            match current {
+                Some(entry) =&gt; {
+                    if entry.key == key {
+                        entry.value = value;
+                        return Ok(());
+                    }
+                    current = &amp;mut entry.next;
+                }
+                None =&gt; break,
+            }
+        }
+
+        // Create new entry
+        let new_entry = Box::new(HashMapEntry {
+            key: key.to_string(),
+            value,
+            next: self.buckets[index].take(),
+        });
+
+        self.buckets[index] = Some(new_entry);
+        self.size += 1;
+
+        Ok(())
+    }
+
+    /// Get value for a key
+    pub fn get(&amp;self, key: &amp;str) -&gt; Option&lt;&amp;T&gt; {
+        let hash = hash_string(key);
+        let index = (hash % self.capacity as u64) as usize;
+
+        let mut current = &amp;self.buckets[index];
+
+        while let Some(entry) = current {
+            if entry.key == key {
+                return Some(&amp;entry.value);
+            }
+            current = &amp;entry.next;
+        }
+
+        None
+    }
+
+    /// Get mutable value for a key
+    pub fn get_mut(&amp;mut self, key: &amp;str) -&gt; Option&lt;&amp;mut T&gt; {
+        let hash = hash_string(key);
+        let index = (hash % self.capacity as u64) as usize;
+
+        let mut current = &amp;mut self.buckets[index];
+
+        while let Some(entry) = current {
+            if entry.key == key {
+                return Some(&amp;mut entry.value);
+            }
+            current = &amp;mut entry.next;
+        }
+
+        None
+    }
+
+    /// Remove a key-value pair
+    pub fn remove(&amp;mut self, key: &amp;str) -&gt; Result&lt;(), String&gt; {
+        let hash = hash_string(key);
+        let index = (hash % self.capacity as u64) as usize;
+
+        let mut current = &amp;mut self.buckets[index];
+
+        loop {
+            match current {
+                Some(entry) =&gt; {
+                    if entry.key == key {
+                        *current = entry.next.take();
+                        self.size -= 1;
+                        return Ok(());
+                    }
+                    current = &amp;mut entry.next;
+                }
+                None =&gt; return Err(&quot;Key not found&quot;.to_string()),
+            }
+        }
+    }
+
+    /// Get the number of entries in the map
+    pub fn size(&amp;self) -&gt; usize {
+        self.size
+    }
+
+    /// Get the capacity of the map
+    pub fn capacity(&amp;self) -&gt; usize {
+        self.capacity
+    }
+}
+
+impl&lt;T&gt; Default for HashMap&lt;T&gt; {
+    fn default() -&gt; Self {
+        Self::new()
+    }
+}</code></pre>
+
+        </div>
+
+        <div class="section">
+            <h2>GEMINI Transpilation</h2>
+
+            <div class="score-card">
+                <div class="score-header">Overall Score: 52/100</div>
+                <table>
+                    <tr>
+                        <th>Dimension</th>
+                        <th>Score</th>
+                        <th>Max</th>
+                        <th>Details</th>
+                    </tr>
+                    <tr>
+                        <td>Compilation</td>
+                        <td><strong>0</strong></td>
+                        <td>25</td>
+                        <td>✗ Compilation errors: warning: unused import: `std::ptr`
+ --&gt; /var/folders/hd/dlntwdzx0rg8g8z7x52tdkp80000gn/T/tmpcg0kgcfd/lib.rs:5:5
+  |
+5 | use std::ptr;
+  |     ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0277]: the trait bound `Box&lt;HashMapEntry&lt;K, V&gt;&gt;: Clone` is not satisfied
+  --&gt; /var/folders/hd/dlntwdzx0rg8g8z7x52tdkp80000gn/T/tmpcg0kgcfd/lib.rs:43:28
+   |
+43 |         let buckets = vec![None; capacity];
+   |                       -----^^^^-----------
+   |                       |    |
+   |                       |    the trait `Clone` is not implemented for `Box&lt;HashMapEntry&lt;K, V&gt;&gt;`
+   |                       required by a bound introduced by this call
+   |
+   = note: required for `Box&lt;HashMapEntry&lt;K, V&gt;&gt;` to implement `Clone`
+   = note: 1 redundant requirement hidden
+   = note: required for `Option&lt;Box&lt;HashMapEntry&lt;K, V&gt;&gt;&gt;` to implement `Clone`
+note: required by a bound in `from_elem`
+  --&gt; /rustc/01f6ddf7588f42ae2d7eb0a2f21d44e8e96674cf/library/alloc/src/vec/mod.rs:3509:1
+help: consider borrowing here
+   |
+43 |         let buckets = vec![&amp;None; capacity];
+   |                            +
+
+error[E0506]: cannot assign to `current.next` because it is borrowed
+  --&gt; /var/folders/hd/dlntwdzx0rg8g8z7x52tdkp80000gn/T/tmpcg0kgcfd/lib.rs:86:17
+   |
+71 |                     match &amp;mut current.next {
+   |                           ----------------- `current.next` is borrowed here
+...
+86 |                 current.next = Some(Box::new(new_entry));
+   |                 ^^^^^^^^^^^^
+   |                 |
+   |                 `current.next` is assigned to here but it was already borrowed
+   |                 borrow later used here
+
+error[E0506]: cannot assign to `current.next` because it is borrowed
+   --&gt; /var/folders/hd/dlntwdzx0rg8g8z7x52tdkp80000gn/T/tmpcg0kgcfd/lib.rs:138:29
+    |
+136 |                     while let Some(next_entry) = &amp;mut current.next {
+    |                                                  ----------------- `current.next` is borrowed here
+137 |                         if next_entry.key == *key {
+138 |                             current.next = next_entry.next.take();
+    |                             ^^^^^^^^^^^^
+    |                             |
+    |                             `current.next` is assigned to here but it was already borrowed
+    |                             borrow later used here
+
+error: aborting due to 3 previous errors; 1 warning emitted
+
+Some errors have detailed explanations: E0277, E0506.
+For more information about an error, try `rustc --explain E0277`.
+</td>
+                    </tr>
+                    <tr>
+                        <td>Safety</td>
+                        <td><strong>20</strong></td>
+                        <td>20</td>
+                        <td>✓ No unsafe blocks | ✓ Uses Result for error handling | ✓ Uses Option for nullable values | ✓ Smart pointer usage</td>
+                    </tr>
+                    <tr>
+                        <td>Quality</td>
+                        <td><strong>17</strong></td>
+                        <td>20</td>
+                        <td>✓ Snake_case naming | ✓ Well documented (5 doc comments) | ✓ Uses ? operator | ✓ Proper type definitions | ✓ Implementation blocks</td>
+                    </tr>
+                    <tr>
+                        <td>Correctness</td>
+                        <td><strong>3</strong></td>
+                        <td>15</td>
+                        <td>✓ Pattern matching</td>
+                    </tr>
+                    <tr>
+                        <td>Maintainability</td>
+                        <td><strong>4</strong></td>
+                        <td>10</td>
+                        <td>✓ Uses constants | ✓ Type aliases</td>
+                    </tr>
+                    <tr>
+                        <td>Performance</td>
+                        <td><strong>8</strong></td>
+                        <td>10</td>
+                        <td>✓ Minimal cloning</td>
+                    </tr>
+                </table>
+            </div>
+
+            <p class="badge badge-error">❌ Compilation: FAILED</p>
+            <h3>Compilation Errors</h3>
+            <pre><code>✗ Compilation errors: warning: unused import: `std::ptr`
+ --&gt; /var/folders/hd/dlntwdzx0rg8g8z7x52tdkp80000gn/T/tmpcg0kgcfd/lib.rs:5:5
+  |
+5 | use std::ptr;
+  |     ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0277]: the trait bound `Box&lt;HashMapEntry&lt;K, V&gt;&gt;: Clone` is not satisfied
+  --&gt; /var/folders/hd/dlntwdzx0rg8g8z7x52tdkp80000gn/T/tmpcg0kgcfd/lib.rs:43:28
+   |
+43 |         let buckets = vec![None; capacity];
+   |                       -----^^^^-----------
+   |                       |    |
+   |                       |    the trait `Clone` is not implemented for `Box&lt;HashMapEntry&lt;K, V&gt;&gt;`
+   |                       required by a bound introduced by this call
+   |
+   = note: required for `Box&lt;HashMapEntry&lt;K, V&gt;&gt;` to implement `Clone`
+   = note: 1 redundant requirement hidden
+   = note: required for `Option&lt;Box&lt;HashMapEntry&lt;K, V&gt;&gt;&gt;` to implement `Clone`
+note: required by a bound in `from_elem`
+  --&gt; /rustc/01f6ddf7588f42ae2d7eb0a2f21d44e8e96674cf/library/alloc/src/vec/mod.rs:3509:1
+help: consider borrowing here
+   |
+43 |         let buckets = vec![&amp;None; capacity];
+   |                            +
+
+error[E0506]: cannot assign to `current.next` because it is borrowed
+  --&gt; /var/folders/hd/dlntwdzx0rg8g8z7x52tdkp80000gn/T/tmpcg0kgcfd/lib.rs:86:17
+   |
+71 |                     match &amp;mut current.next {
+   |                           ----------------- `current.next` is borrowed here
+...
+86 |                 current.next = Some(Box::new(new_entry));
+   |                 ^^^^^^^^^^^^
+   |                 |
+   |                 `current.next` is assigned to here but it was already borrowed
+   |                 borrow later used here
+
+error[E0506]: cannot assign to `current.next` because it is borrowed
+   --&gt; /var/folders/hd/dlntwdzx0rg8g8z7x52tdkp80000gn/T/tmpcg0kgcfd/lib.rs:138:29
+    |
+136 |                     while let Some(next_entry) = &amp;mut current.next {
+    |                                                  ----------------- `current.next` is borrowed here
+137 |                         if next_entry.key == *key {
+138 |                             current.next = next_entry.next.take();
+    |                             ^^^^^^^^^^^^
+    |                             |
+    |                             `current.next` is assigned to here but it was already borrowed
+    |                             borrow later used here
+
+error: aborting due to 3 previous errors; 1 warning emitted
+
+Some errors have detailed explanations: E0277, E0506.
+For more information about an error, try `rustc --explain E0277`.
+</code></pre>
+
+            <h3>Generated Rust Code (4309 bytes)</h3>
+            <pre><code>use std::collections::hash_map::DefaultHasher;
+use std::error::Error;
+use std::fmt;
+use std::hash::{Hash, Hasher};
+use std::ptr;
+
+const HASHMAP_INITIAL_CAPACITY: usize = 16;
+
+#[derive(Debug)]
+struct HashMapError(String);
+
+impl fmt::Display for HashMapError {
+    fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
+        write!(f, &quot;HashMapError: {}&quot;, self.0)
+    }
+}
+
+impl Error for HashMapError {}
+
+type Result&lt;T&gt; = std::result::Result&lt;T, HashMapError&gt;;
+
+#[derive(Debug)]
+struct HashMapEntry&lt;K, V&gt; {
+    key: K,
+    value: V,
+    next: Option&lt;Box&lt;HashMapEntry&lt;K, V&gt;&gt;&gt;,
+}
+
+#[derive(Debug)]
+struct HashMap&lt;K, V&gt; {
+    buckets: Vec&lt;Option&lt;Box&lt;HashMapEntry&lt;K, V&gt;&gt;&gt;&gt;,
+    capacity: usize,
+    size: usize,
+}
+
+impl&lt;K, V&gt; HashMap&lt;K, V&gt;
+where
+    K: Eq + Hash + Clone,
+{
+    /// Creates a new hash map with the initial capacity.
+    fn new() -&gt; Self {
+        let capacity = HASHMAP_INITIAL_CAPACITY;
+        let buckets = vec![None; capacity];
+        HashMap {
+            buckets,
+            capacity,
+            size: 0,
+        }
+    }
+
+    /// Generates a hash value for the given key.
+    fn hash_string(key: &amp;K) -&gt; u64 {
+        let mut hasher = DefaultHasher::new();
+        key.hash(&amp;mut hasher);
+        hasher.finish()
+    }
+
+    /// Inserts a key-value pair into the hash map.
+    fn put(&amp;mut self, key: K, value: V) -&gt; Result&lt;()&gt; {
+        let hash = Self::hash_string(&amp;key);
+        let index = (hash % self.capacity as u64) as usize;
+
+        match &amp;mut self.buckets[index] {
+            Some(entry) =&gt; {
+                let mut current = entry;
+                loop {
+                    if current.key == key {
+                        current.value = value;
+                        return Ok(());
+                    }
+                    match &amp;mut current.next {
+                        Some(next_entry) =&gt; {
+                            current = next_entry;
+                        }
+                        None =&gt; {
+                            break;
+                        }
+                    }
+                }
+
+                let new_entry = HashMapEntry {
+                    key: key.clone(),
+                    value,
+                    next: None,
+                };
+                current.next = Some(Box::new(new_entry));
+            }
+            None =&gt; {
+                let new_entry = HashMapEntry {
+                    key: key.clone(),
+                    value,
+                    next: None,
+                };
+                self.buckets[index] = Some(Box::new(new_entry));
+            }
+        }
+
+        self.size += 1;
+        Ok(())
+    }
+
+    /// Retrieves the value associated with the given key.
+    fn get(&amp;self, key: &amp;K) -&gt; Option&lt;&amp;V&gt; {
+        let hash = Self::hash_string(key);
+        let index = (hash % self.capacity as u64) as usize;
+
+        let mut current = self.buckets[index].as_ref()?;
+        loop {
+            if current.key == *key {
+                return Some(&amp;current.value);
+            }
+            match &amp;current.next {
+                Some(next_entry) =&gt; {
+                    current = next_entry;
+                }
+                None =&gt; {
+                    return None;
+                }
+            }
+        }
+    }
+
+    /// Removes a key-value pair from the hash map.
+    fn remove(&amp;mut self, key: &amp;K) -&gt; Result&lt;()&gt; {
+        let hash = Self::hash_string(key);
+        let index = (hash % self.capacity as u64) as usize;
+
+        match &amp;mut self.buckets[index] {
+            Some(entry) =&gt; {
+                if entry.key == *key {
+                    self.buckets[index] = entry.next.take();
+                    self.size -= 1;
+                    return Ok(());
+                } else {
+                    let mut current = entry;
+                    while let Some(next_entry) = &amp;mut current.next {
+                        if next_entry.key == *key {
+                            current.next = next_entry.next.take();
+                            self.size -= 1;
+                            return Ok(());
+                        }
+                        current = next_entry;
+                    }
+                }
+            }
+            None =&gt; {
+                return Err(HashMapError(&quot;Key not found&quot;.to_string()));
+            }
+        }
+
+        Err(HashMapError(&quot;Key not found&quot;.to_string()))
+    }
+}</code></pre>
+
+        </div>
+
+        <div class="section">
+            <h2>Model Comparison</h2>
+            <table class="comparison-table">
+                <tr>
+                    <th>Model</th>
+                    <th>Total</th>
+                    <th>Compilation</th>
+                    <th>Safety</th>
+                    <th>Quality</th>
+                    <th>Correctness</th>
+                    <th>Maintainability</th>
+                    <th>Performance</th>
+                </tr>
+
+                <tr>
+                    <td><strong>CLAUDE</strong></td>
+                    <td><strong>53/100</strong></td>
+                    <td>0/25</td>
+                    <td>20/20</td>
+                    <td>15/20</td>
+                    <td>3/15</td>
+                    <td>5/10</td>
+                    <td>10/10</td>
+                </tr>
+
+                <tr>
+                    <td><strong>GEMINI</strong></td>
+                    <td><strong>52/100</strong></td>
+                    <td>0/25</td>
+                    <td>20/20</td>
+                    <td>17/20</td>
+                    <td>3/15</td>
+                    <td>4/10</td>
+                    <td>8/10</td>
+                </tr>
+
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Evaluation Methodology</h2>
+            <p>CELLO evaluates transpilation quality across 6 dimensions:</p>
+            <ul>
+                <li><strong>Compilation (25%)</strong> — Does the code compile with rustc?</li>
+                <li><strong>Safety (20%)</strong> — Memory safety improvements (reduced unsafe, proper error handling)</li>
+                <li><strong>Quality (20%)</strong> — Idiomatic Rust patterns, documentation, naming conventions</li>
+                <li><strong>Correctness (15%)</strong> — Functional equivalence, edge case handling, tests</li>
+                <li><strong>Maintainability (10%)</strong> — Code organization, public API clarity, modularity</li>
+                <li><strong>Performance (10%)</strong> — Efficiency patterns (minimal cloning, reference usage)</li>
+            </ul>
+            <p style="margin-top: 15px;"><strong>Total possible score:</strong> 100 points</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -101,9 +101,9 @@ Each report includes:
 - Side-by-side model comparison
 
 **Latest (Feb 16, 2026)** — With real compilation:
-- [string_utils](https://aosf-org.github.io/cello/reports/string_utils_20260216_121234_report.md) — Both compiled ✅
-- [buffer](https://aosf-org.github.io/cello/reports/buffer_20260216_121248_report.md) — Both compiled ✅
-- [hashmap](https://aosf-org.github.io/cello/reports/hashmap_20260216_121307_report.md) — Both failed ❌ (borrow checker)
+- [string_utils](https://aosf-org.github.io/cello/reports/string_utils_20260216_121234_report.html) — Both compiled ✅
+- [buffer](https://aosf-org.github.io/cello/reports/buffer_20260216_121248_report.html) — Both compiled ✅
+- [hashmap](https://aosf-org.github.io/cello/reports/hashmap_20260216_121307_report.html) — Both failed ❌ (borrow checker)
 
 ## Project Structure
 

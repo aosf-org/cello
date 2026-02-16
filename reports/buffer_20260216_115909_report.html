@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CELLO Report: buffer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+            color: #c9d1d9;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #30363d;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            color: #58a6ff;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #8b949e;
+            font-size: 1.1em;
+        }
+        
+        .back-link {
+            display: inline-block;
+            color: #58a6ff;
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .section {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #58a6ff;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        h3 {
+            color: #58a6ff;
+            margin: 25px 0 15px 0;
+            font-size: 1.3em;
+        }
+        
+        pre {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: #0d1117;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #30363d;
+        }
+        
+        th {
+            background: #0d1117;
+            color: #58a6ff;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #0d1117;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .badge-success {
+            background: #238636;
+            color: white;
+        }
+        
+        .badge-error {
+            background: #da3633;
+            color: white;
+        }
+        
+        .badge-warning {
+            background: #f59e0b;
+            color: #0d1117;
+        }
+        
+        .score-card {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .score-header {
+            font-size: 1.5em;
+            color: #58a6ff;
+            margin-bottom: 15px;
+        }
+        
+        ul {
+            margin-left: 20px;
+            color: #8b949e;
+        }
+        
+        ul li {
+            margin: 5px 0;
+        }
+        
+        .comparison-table {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Reports Index</a>
+        
+        <header>
+            <h1>CELLO Evaluation Report: buffer</h1>
+            <p class="subtitle">Generated: 2026-02-16T11:58:56.937904</p>
+        </header>
+
+        <div class="section">
+            <h2>Original C Code (1997 bytes)</h2>
+            <pre><code>/* Dynamic buffer implementation - common pattern in C infrastructure */
+
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+typedef struct {
+    char* data;
+    size_t size;      // Current size
+    size_t capacity;  // Allocated capacity
+} Buffer;
+
+/**
+ * Initialize a new buffer with initial capacity
+ */
+Buffer* buffer_new(size_t initial_capacity) {
+    Buffer* buf = (Buffer*)malloc(sizeof(Buffer));
+    if (!buf) return NULL;
+    
+    buf-&gt;data = (char*)malloc(initial_capacity);
+    if (!buf-&gt;data) {
+        free(buf);
+        return NULL;
+    }
+    
+    buf-&gt;size = 0;
+    buf-&gt;capacity = initial_capacity;
+    buf-&gt;data[0] = &#x27;\0&#x27;;
+    
+    return buf;
+}
+
+/**
+ * Grow buffer capacity (doubles current capacity)
+ */
+static int buffer_grow(Buffer* buf) {
+    if (!buf) return -1;
+    
+    size_t new_capacity = buf-&gt;capacity * 2;
+    if (new_capacity &lt; 16) new_capacity = 16;
+    
+    char* new_data = (char*)realloc(buf-&gt;data, new_capacity);
+    if (!new_data) return -1;
+    
+    buf-&gt;data = new_data;
+    buf-&gt;capacity = new_capacity;
+    return 0;
+}
+
+/**
+ * Append data to buffer
+ */
+int buffer_append(Buffer* buf, const char* data, size_t len) {
+    if (!buf || !data) return -1;
+    
+    while (buf-&gt;size + len + 1 &gt; buf-&gt;capacity) {
+        if (buffer_grow(buf) != 0) return -1;
+    }
+    
+    memcpy(buf-&gt;data + buf-&gt;size, data, len);
+    buf-&gt;size += len;
+    buf-&gt;data[buf-&gt;size] = &#x27;\0&#x27;;
+    
+    return 0;
+}
+
+/**
+ * Append a string to buffer
+ */
+int buffer_append_str(Buffer* buf, const char* str) {
+    if (!str) return -1;
+    return buffer_append(buf, str, strlen(str));
+}
+
+/**
+ * Clear buffer contents
+ */
+void buffer_clear(Buffer* buf) {
+    if (!buf) return;
+    buf-&gt;size = 0;
+    if (buf-&gt;data) buf-&gt;data[0] = &#x27;\0&#x27;;
+}
+
+/**
+ * Free buffer and its data
+ */
+void buffer_free(Buffer* buf) {
+    if (!buf) return;
+    free(buf-&gt;data);
+    free(buf);
+}
+
+/**
+ * Get current buffer contents as C string
+ */
+const char* buffer_cstr(const Buffer* buf) {
+    return buf ? buf-&gt;data : NULL;
+}
+</code></pre>
+        </div>
+
+        <div class="section">
+            <h2>CLAUDE Transpilation</h2>
+
+            <div class="score-card">
+                <div class="score-header">Overall Score: 74/100</div>
+                <table>
+                    <tr>
+                        <th>Dimension</th>
+                        <th>Score</th>
+                        <th>Max</th>
+                        <th>Details</th>
+                    </tr>
+                    <tr>
+                        <td>Compilation</td>
+                        <td><strong>25</strong></td>
+                        <td>25</td>
+                        <td>✓ Compiles successfully</td>
+                    </tr>
+                    <tr>
+                        <td>Safety</td>
+                        <td><strong>18</strong></td>
+                        <td>20</td>
+                        <td>✓ No unsafe blocks | ✓ Uses Result for error handling | ✓ Uses Option for nullable values</td>
+                    </tr>
+                    <tr>
+                        <td>Quality</td>
+                        <td><strong>14</strong></td>
+                        <td>20</td>
+                        <td>✓ Snake_case naming | ✓ Well documented (9 doc comments) | ✓ Proper type definitions | ✓ Implementation blocks</td>
+                    </tr>
+                    <tr>
+                        <td>Correctness</td>
+                        <td><strong>4</strong></td>
+                        <td>15</td>
+                        <td>✓ Edge case checks</td>
+                    </tr>
+                    <tr>
+                        <td>Maintainability</td>
+                        <td><strong>3</strong></td>
+                        <td>10</td>
+                        <td>✓ Clear public API (9 items)</td>
+                    </tr>
+                    <tr>
+                        <td>Performance</td>
+                        <td><strong>10</strong></td>
+                        <td>10</td>
+                        <td>✓ Minimal cloning | ✓ Reference usage</td>
+                    </tr>
+                </table>
+            </div>
+
+            <p class="badge badge-success">✅ Compilation: PASSED</p>
+
+            <h3>Generated Rust Code (1274 bytes)</h3>
+            <pre><code>/// Dynamic buffer implementation for managing growable byte/string data
+pub struct Buffer {
+    data: Vec&lt;u8&gt;,
+}
+
+impl Buffer {
+    /// Initialize a new buffer with initial capacity
+    pub fn new(initial_capacity: usize) -&gt; Self {
+        Buffer {
+            data: Vec::with_capacity(initial_capacity),
+        }
+    }
+
+    /// Append data to buffer
+    pub fn append(&amp;mut self, data: &amp;[u8]) -&gt; Result&lt;(), String&gt; {
+        self.data.extend_from_slice(data);
+        Ok(())
+    }
+
+    /// Append a string to buffer
+    pub fn append_str(&amp;mut self, s: &amp;str) -&gt; Result&lt;(), String&gt; {
+        self.append(s.as_bytes())
+    }
+
+    /// Clear buffer contents
+    pub fn clear(&amp;mut self) {
+        self.data.clear();
+    }
+
+    /// Get current buffer contents as a byte slice
+    pub fn as_bytes(&amp;self) -&gt; &amp;[u8] {
+        &amp;self.data
+    }
+
+    /// Get current buffer contents as C string (null-terminated)
+    pub fn as_cstr(&amp;self) -&gt; Option&lt;&amp;str&gt; {
+        std::str::from_utf8(&amp;self.data).ok()
+    }
+
+    /// Get current size
+    pub fn size(&amp;self) -&gt; usize {
+        self.data.len()
+    }
+
+    /// Get current capacity
+    pub fn capacity(&amp;self) -&gt; usize {
+        self.data.capacity()
+    }
+}
+
+impl Default for Buffer {
+    fn default() -&gt; Self {
+        Self::new(16)
+    }
+}</code></pre>
+
+        </div>
+
+        <div class="section">
+            <h2>GEMINI Transpilation</h2>
+
+            <div class="score-card">
+                <div class="score-header">Overall Score: 63/100</div>
+                <table>
+                    <tr>
+                        <th>Dimension</th>
+                        <th>Score</th>
+                        <th>Max</th>
+                        <th>Details</th>
+                    </tr>
+                    <tr>
+                        <td>Compilation</td>
+                        <td><strong>25</strong></td>
+                        <td>25</td>
+                        <td>✓ Compiles successfully</td>
+                    </tr>
+                    <tr>
+                        <td>Safety</td>
+                        <td><strong>2</strong></td>
+                        <td>20</td>
+                        <td>✗ Heavy unsafe usage (8 blocks) | ✓ Uses Result for error handling | ⚠ Uses raw pointers</td>
+                    </tr>
+                    <tr>
+                        <td>Quality</td>
+                        <td><strong>17</strong></td>
+                        <td>20</td>
+                        <td>✓ Snake_case naming | ✓ Well documented (9 doc comments) | ✓ Uses ? operator | ✓ Proper type definitions | ✓ Implementation blocks</td>
+                    </tr>
+                    <tr>
+                        <td>Correctness</td>
+                        <td><strong>4</strong></td>
+                        <td>15</td>
+                        <td>✓ Edge case checks</td>
+                    </tr>
+                    <tr>
+                        <td>Maintainability</td>
+                        <td><strong>5</strong></td>
+                        <td>10</td>
+                        <td>✓ Clear public API (7 items) | ✓ Uses constants</td>
+                    </tr>
+                    <tr>
+                        <td>Performance</td>
+                        <td><strong>10</strong></td>
+                        <td>10</td>
+                        <td>✓ Minimal cloning | ✓ Reference usage</td>
+                    </tr>
+                </table>
+            </div>
+
+            <p class="badge badge-success">✅ Compilation: PASSED</p>
+
+            <h3>Generated Rust Code (3269 bytes)</h3>
+            <pre><code>use std::alloc::{alloc, dealloc, realloc, Layout};
+use std::ffi::{CStr, CString};
+use std::mem;
+use std::ptr;
+
+/// Represents a dynamic buffer.
+pub struct Buffer {
+    data: *mut u8,
+    size: usize,
+    capacity: usize,
+}
+
+impl Buffer {
+    /// Initializes a new buffer with the specified initial capacity.
+    pub fn new(initial_capacity: usize) -&gt; Result&lt;Self, &amp;&#x27;static str&gt; {
+        let layout = Layout::array::&lt;u8&gt;(initial_capacity)
+            .map_err(|_| &quot;Failed to create layout&quot;)?;
+
+        let data = unsafe { alloc(layout) };
+
+        if data.is_null() {
+            return Err(&quot;Failed to allocate memory for buffer data&quot;);
+        }
+
+        unsafe {
+            data.write(0); // Null terminate
+        }
+
+        Ok(Buffer {
+            data,
+            size: 0,
+            capacity: initial_capacity,
+        })
+    }
+
+    /// Doubles the buffer&#x27;s capacity.
+    fn grow(&amp;mut self) -&gt; Result&lt;(), &amp;&#x27;static str&gt; {
+        let new_capacity = if self.capacity * 2 &gt; 16 {
+            self.capacity * 2
+        } else {
+            16
+        };
+
+        let old_layout = Layout::array::&lt;u8&gt;(self.capacity)
+            .map_err(|_| &quot;Failed to create layout&quot;)?;
+        let new_layout = Layout::array::&lt;u8&gt;(new_capacity)
+            .map_err(|_| &quot;Failed to create layout&quot;)?;
+
+        let new_data = unsafe {
+            realloc(self.data, old_layout, new_layout.size())
+        };
+
+        if new_data.is_null() {
+            return Err(&quot;Failed to reallocate memory for buffer&quot;);
+        }
+
+        self.data = new_data;
+        self.capacity = new_capacity;
+        Ok(())
+    }
+
+    /// Appends data to the buffer.
+    pub fn append(&amp;mut self, data: &amp;[u8]) -&gt; Result&lt;(), &amp;&#x27;static str&gt; {
+        if self.size + data.len() + 1 &gt; self.capacity {
+            self.grow()?;
+        }
+
+        unsafe {
+            ptr::copy_nonoverlapping(
+                data.as_ptr(),
+                self.data.add(self.size),
+                data.len(),
+            );
+            self.size += data.len();
+            self.data.add(self.size).write(0); // Null terminate
+        }
+
+        Ok(())
+    }
+
+    /// Appends a string to the buffer.
+    pub fn append_str(&amp;mut self, s: &amp;str) -&gt; Result&lt;(), &amp;&#x27;static str&gt; {
+        self.append(s.as_bytes())
+    }
+
+    /// Clears the buffer&#x27;s contents.
+    pub fn clear(&amp;mut self) {
+        self.size = 0;
+        if !self.data.is_null() {
+            unsafe {
+                self.data.write(0);
+            }
+        }
+    }
+
+    /// Returns the current buffer contents as a C string.
+    pub fn c_str(&amp;self) -&gt; Result&lt;CString, std::ffi::NulError&gt; {
+        unsafe {
+            CStr::from_ptr(self.data as *const i8).to_owned()
+        }
+    }
+
+    /// Returns the current buffer contents as a byte slice.
+    pub fn as_bytes(&amp;self) -&gt; &amp;[u8] {
+        unsafe { std::slice::from_raw_parts(self.data, self.size) }
+    }
+}
+
+impl Drop for Buffer {
+    /// Frees the buffer&#x27;s memory when it goes out of scope.
+    fn drop(&amp;mut self) {
+        if !self.data.is_null() {
+            let layout = Layout::array::&lt;u8&gt;(self.capacity).unwrap();
+            unsafe {
+                dealloc(self.data, layout);
+            }
+            self.data = ptr::null_mut();
+            self.size = 0;
+            self.capacity = 0;
+        }
+    }
+}</code></pre>
+
+        </div>
+
+        <div class="section">
+            <h2>Model Comparison</h2>
+            <table class="comparison-table">
+                <tr>
+                    <th>Model</th>
+                    <th>Total</th>
+                    <th>Compilation</th>
+                    <th>Safety</th>
+                    <th>Quality</th>
+                    <th>Correctness</th>
+                    <th>Maintainability</th>
+                    <th>Performance</th>
+                </tr>
+
+                <tr>
+                    <td><strong>CLAUDE</strong></td>
+                    <td><strong>74/100</strong></td>
+                    <td>25/25</td>
+                    <td>18/20</td>
+                    <td>14/20</td>
+                    <td>4/15</td>
+                    <td>3/10</td>
+                    <td>10/10</td>
+                </tr>
+
+                <tr>
+                    <td><strong>GEMINI</strong></td>
+                    <td><strong>63/100</strong></td>
+                    <td>25/25</td>
+                    <td>2/20</td>
+                    <td>17/20</td>
+                    <td>4/15</td>
+                    <td>5/10</td>
+                    <td>10/10</td>
+                </tr>
+
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Evaluation Methodology</h2>
+            <p>CELLO evaluates transpilation quality across 6 dimensions:</p>
+            <ul>
+                <li><strong>Compilation (25%)</strong> — Does the code compile with rustc?</li>
+                <li><strong>Safety (20%)</strong> — Memory safety improvements (reduced unsafe, proper error handling)</li>
+                <li><strong>Quality (20%)</strong> — Idiomatic Rust patterns, documentation, naming conventions</li>
+                <li><strong>Correctness (15%)</strong> — Functional equivalence, edge case handling, tests</li>
+                <li><strong>Maintainability (10%)</strong> — Code organization, public API clarity, modularity</li>
+                <li><strong>Performance (10%)</strong> — Efficiency patterns (minimal cloning, reference usage)</li>
+            </ul>
+            <p style="margin-top: 15px;"><strong>Total possible score:</strong> 100 points</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CELLO Report: string_utils</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+            color: #c9d1d9;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #30363d;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            color: #58a6ff;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #8b949e;
+            font-size: 1.1em;
+        }
+        
+        .back-link {
+            display: inline-block;
+            color: #58a6ff;
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .section {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #58a6ff;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        h3 {
+            color: #58a6ff;
+            margin: 25px 0 15px 0;
+            font-size: 1.3em;
+        }
+        
+        pre {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: #0d1117;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #30363d;
+        }
+        
+        th {
+            background: #0d1117;
+            color: #58a6ff;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #0d1117;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .badge-success {
+            background: #238636;
+            color: white;
+        }
+        
+        .badge-error {
+            background: #da3633;
+            color: white;
+        }
+        
+        .badge-warning {
+            background: #f59e0b;
+            color: #0d1117;
+        }
+        
+        .score-card {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .score-header {
+            font-size: 1.5em;
+            color: #58a6ff;
+            margin-bottom: 15px;
+        }
+        
+        ul {
+            margin-left: 20px;
+            color: #8b949e;
+        }
+        
+        ul li {
+            margin: 5px 0;
+        }
+        
+        .comparison-table {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Reports Index</a>
+        
+        <header>
+            <h1>CELLO Evaluation Report: string_utils</h1>
+            <p class="subtitle">Generated: 2026-02-15T23:48:08.689329</p>
+        </header>
+
+        <div class="section">
+            <h2>Original C Code (1768 bytes)</h2>
+            <pre><code>/* Simple string utility functions - common in infrastructure code */
+
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;ctype.h&gt;
+
+/**
+ * Duplicate a string (like strdup)
+ * Returns allocated string or NULL on failure
+ */
+char* str_duplicate(const char* src) {
+    if (!src) return NULL;
+    
+    size_t len = strlen(src);
+    char* dst = (char*)malloc(len + 1);
+    if (!dst) return NULL;
+    
+    strcpy(dst, src);
+    return dst;
+}
+
+/**
+ * Trim whitespace from both ends of a string
+ * Modifies string in place, returns pointer to start
+ */
+char* str_trim(char* str) {
+    if (!str) return NULL;
+    
+    // Trim leading whitespace
+    while (isspace((unsigned char)*str)) str++;
+    
+    if (*str == 0) return str;
+    
+    // Trim trailing whitespace
+    char* end = str + strlen(str) - 1;
+    while (end &gt; str &amp;&amp; isspace((unsigned char)*end)) end--;
+    
+    end[1] = &#x27;\0&#x27;;
+    return str;
+}
+
+/**
+ * Convert string to lowercase
+ * Modifies string in place
+ */
+void str_tolower(char* str) {
+    if (!str) return;
+    
+    while (*str) {
+        *str = tolower((unsigned char)*str);
+        str++;
+    }
+}
+
+/**
+ * Safe string concatenation with buffer size
+ * Returns 0 on success, -1 on overflow
+ */
+int str_concat(char* dst, size_t dst_size, const char* src) {
+    if (!dst || !src || dst_size == 0) return -1;
+    
+    size_t dst_len = strlen(dst);
+    size_t src_len = strlen(src);
+    
+    if (dst_len + src_len + 1 &gt; dst_size) {
+        return -1; // Would overflow
+    }
+    
+    strcat(dst, src);
+    return 0;
+}
+
+/**
+ * Count occurrences of a character in a string
+ */
+int str_count_char(const char* str, char c) {
+    if (!str) return 0;
+    
+    int count = 0;
+    while (*str) {
+        if (*str == c) count++;
+        str++;
+    }
+    return count;
+}
+</code></pre>
+        </div>
+
+        <div class="section">
+            <h2>CLAUDE Transpilation</h2>
+
+            <p class="badge badge-error">❌ Evaluation Failed</p>
+            <p>[Errno 2] No such file or directory: &#x27;rustc&#x27;</p>
+
+        </div>
+
+        <div class="section">
+            <h2>GEMINI Transpilation</h2>
+
+            <p class="badge badge-error">❌ Evaluation Failed</p>
+            <p>404 models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.</p>
+
+        </div>
+
+        <div class="section">
+            <h2>Model Comparison</h2>
+            <table class="comparison-table">
+                <tr>
+                    <th>Model</th>
+                    <th>Total</th>
+                    <th>Compilation</th>
+                    <th>Safety</th>
+                    <th>Quality</th>
+                    <th>Correctness</th>
+                    <th>Maintainability</th>
+                    <th>Performance</th>
+                </tr>
+
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Evaluation Methodology</h2>
+            <p>CELLO evaluates transpilation quality across 6 dimensions:</p>
+            <ul>
+                <li><strong>Compilation (25%)</strong> — Does the code compile with rustc?</li>
+                <li><strong>Safety (20%)</strong> — Memory safety improvements (reduced unsafe, proper error handling)</li>
+                <li><strong>Quality (20%)</strong> — Idiomatic Rust patterns, documentation, naming conventions</li>
+                <li><strong>Correctness (15%)</strong> — Functional equivalence, edge case handling, tests</li>
+                <li><strong>Maintainability (10%)</strong> — Code organization, public API clarity, modularity</li>
+                <li><strong>Performance (10%)</strong> — Efficiency patterns (minimal cloning, reference usage)</li>
+            </ul>
+            <p style="margin-top: 15px;"><strong>Total possible score:</strong> 100 points</p>
+        </div>
+    </div>
+</body>
+</html>

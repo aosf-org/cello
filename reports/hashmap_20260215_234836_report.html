@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CELLO Report: hashmap</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+            color: #c9d1d9;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #30363d;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            color: #58a6ff;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #8b949e;
+            font-size: 1.1em;
+        }
+        
+        .back-link {
+            display: inline-block;
+            color: #58a6ff;
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .section {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #58a6ff;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        h3 {
+            color: #58a6ff;
+            margin: 25px 0 15px 0;
+            font-size: 1.3em;
+        }
+        
+        pre {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: #0d1117;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #30363d;
+        }
+        
+        th {
+            background: #0d1117;
+            color: #58a6ff;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #0d1117;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .badge-success {
+            background: #238636;
+            color: white;
+        }
+        
+        .badge-error {
+            background: #da3633;
+            color: white;
+        }
+        
+        .badge-warning {
+            background: #f59e0b;
+            color: #0d1117;
+        }
+        
+        .score-card {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .score-header {
+            font-size: 1.5em;
+            color: #58a6ff;
+            margin-bottom: 15px;
+        }
+        
+        ul {
+            margin-left: 20px;
+            color: #8b949e;
+        }
+        
+        ul li {
+            margin: 5px 0;
+        }
+        
+        .comparison-table {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Reports Index</a>
+        
+        <header>
+            <h1>CELLO Evaluation Report: hashmap</h1>
+            <p class="subtitle">Generated: 2026-02-15T23:48:22.884776</p>
+        </header>
+
+        <div class="section">
+            <h2>Original C Code (3297 bytes)</h2>
+            <pre><code>/* Simple hash map implementation - fundamental data structure */
+
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+#define HASHMAP_INITIAL_CAPACITY 16
+
+typedef struct HashMapEntry {
+    char* key;
+    void* value;
+    struct HashMapEntry* next;
+} HashMapEntry;
+
+typedef struct {
+    HashMapEntry** buckets;
+    size_t capacity;
+    size_t size;
+} HashMap;
+
+/**
+ * Simple hash function (djb2)
+ */
+static unsigned long hash_string(const char* str) {
+    unsigned long hash = 5381;
+    int c;
+    while ((c = *str++)) {
+        hash = ((hash &lt;&lt; 5) + hash) + c;
+    }
+    return hash;
+}
+
+/**
+ * Create a new hash map
+ */
+HashMap* hashmap_new(void) {
+    HashMap* map = (HashMap*)malloc(sizeof(HashMap));
+    if (!map) return NULL;
+    
+    map-&gt;capacity = HASHMAP_INITIAL_CAPACITY;
+    map-&gt;size = 0;
+    map-&gt;buckets = (HashMapEntry**)calloc(map-&gt;capacity, sizeof(HashMapEntry*));
+    
+    if (!map-&gt;buckets) {
+        free(map);
+        return NULL;
+    }
+    
+    return map;
+}
+
+/**
+ * Insert or update a key-value pair
+ */
+int hashmap_put(HashMap* map, const char* key, void* value) {
+    if (!map || !key) return -1;
+    
+    unsigned long hash = hash_string(key);
+    size_t index = hash % map-&gt;capacity;
+    
+    // Check if key exists
+    HashMapEntry* entry = map-&gt;buckets[index];
+    while (entry) {
+        if (strcmp(entry-&gt;key, key) == 0) {
+            entry-&gt;value = value;
+            return 0;
+        }
+        entry = entry-&gt;next;
+    }
+    
+    // Create new entry
+    HashMapEntry* new_entry = (HashMapEntry*)malloc(sizeof(HashMapEntry));
+    if (!new_entry) return -1;
+    
+    new_entry-&gt;key = strdup(key);
+    if (!new_entry-&gt;key) {
+        free(new_entry);
+        return -1;
+    }
+    
+    new_entry-&gt;value = value;
+    new_entry-&gt;next = map-&gt;buckets[index];
+    map-&gt;buckets[index] = new_entry;
+    map-&gt;size++;
+    
+    return 0;
+}
+
+/**
+ * Get value for a key
+ */
+void* hashmap_get(HashMap* map, const char* key) {
+    if (!map || !key) return NULL;
+    
+    unsigned long hash = hash_string(key);
+    size_t index = hash % map-&gt;capacity;
+    
+    HashMapEntry* entry = map-&gt;buckets[index];
+    while (entry) {
+        if (strcmp(entry-&gt;key, key) == 0) {
+            return entry-&gt;value;
+        }
+        entry = entry-&gt;next;
+    }
+    
+    return NULL;
+}
+
+/**
+ * Remove a key-value pair
+ */
+int hashmap_remove(HashMap* map, const char* key) {
+    if (!map || !key) return -1;
+    
+    unsigned long hash = hash_string(key);
+    size_t index = hash % map-&gt;capacity;
+    
+    HashMapEntry** indirect = &amp;map-&gt;buckets[index];
+    HashMapEntry* entry = *indirect;
+    
+    while (entry) {
+        if (strcmp(entry-&gt;key, key) == 0) {
+            *indirect = entry-&gt;next;
+            free(entry-&gt;key);
+            free(entry);
+            map-&gt;size--;
+            return 0;
+        }
+        indirect = &amp;entry-&gt;next;
+        entry = entry-&gt;next;
+    }
+    
+    return -1;
+}
+
+/**
+ * Free hash map and all entries
+ */
+void hashmap_free(HashMap* map) {
+    if (!map) return;
+    
+    for (size_t i = 0; i &lt; map-&gt;capacity; i++) {
+        HashMapEntry* entry = map-&gt;buckets[i];
+        while (entry) {
+            HashMapEntry* next = entry-&gt;next;
+            free(entry-&gt;key);
+            free(entry);
+            entry = next;
+        }
+    }
+    
+    free(map-&gt;buckets);
+    free(map);
+}
+</code></pre>
+        </div>
+
+        <div class="section">
+            <h2>CLAUDE Transpilation</h2>
+
+            <p class="badge badge-error">❌ Evaluation Failed</p>
+            <p>[Errno 2] No such file or directory: &#x27;rustc&#x27;</p>
+
+        </div>
+
+        <div class="section">
+            <h2>GEMINI Transpilation</h2>
+
+            <p class="badge badge-error">❌ Evaluation Failed</p>
+            <p>404 models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.</p>
+
+        </div>
+
+        <div class="section">
+            <h2>Model Comparison</h2>
+            <table class="comparison-table">
+                <tr>
+                    <th>Model</th>
+                    <th>Total</th>
+                    <th>Compilation</th>
+                    <th>Safety</th>
+                    <th>Quality</th>
+                    <th>Correctness</th>
+                    <th>Maintainability</th>
+                    <th>Performance</th>
+                </tr>
+
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Evaluation Methodology</h2>
+            <p>CELLO evaluates transpilation quality across 6 dimensions:</p>
+            <ul>
+                <li><strong>Compilation (25%)</strong> — Does the code compile with rustc?</li>
+                <li><strong>Safety (20%)</strong> — Memory safety improvements (reduced unsafe, proper error handling)</li>
+                <li><strong>Quality (20%)</strong> — Idiomatic Rust patterns, documentation, naming conventions</li>
+                <li><strong>Correctness (15%)</strong> — Functional equivalence, edge case handling, tests</li>
+                <li><strong>Maintainability (10%)</strong> — Code organization, public API clarity, modularity</li>
+                <li><strong>Performance (10%)</strong> — Efficiency patterns (minimal cloning, reference usage)</li>
+            </ul>
+            <p style="margin-top: 15px;"><strong>Total possible score:</strong> 100 points</p>
+        </div>
+    </div>
+</body>
+</html>
